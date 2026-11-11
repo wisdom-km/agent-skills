@@ -2,6 +2,13 @@
 
 Collection of programming and AI agent skills (primarily `SKILL.md` files) for Cursor, Grok, Claude Code, and other coding agents.
 
+This repository will hold additional skills over time. Current skills:
+
+- [`architecture-from-idea`](skills/architecture-from-idea/) — Choose a throwaway demo, a tracer-bullet skeleton, or a long-lived product, then record the architecture before any code.
+- [`agent-constraint-docs`](skills/agent-constraint-docs/) — Write or update the documents coding agents follow once the architecture is agreed.
+- [`vibe-coding-loop`](skills/vibe-coding-loop/) — Run each coding task as a scoped loop: brief, plan, implement, verify, and review.
+- [`architecture-guardrails`](skills/architecture-guardrails/) — Turn exception-free architecture rules into linters, structural tests, CI gates, or agent hooks.
+
 ## Structure
 
 Each skill lives in its own directory:
