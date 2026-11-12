@@ -7,9 +7,9 @@ description: >-
   the architecture, verify with real commands, review against the spec, and feed
   repeated mistakes back into docs or checks. Also when documents are already in
   place and the next step is to code, or the user says 文档已经有了, 下一步写代码, 下一步是实现,
-  开始编码, 开始实现, Vibe Coding, 做一个编码任务, 按任务让 AI 写代码, or 任务循环. Also when
-  fixing a bug and the first step is reading runtime logs, or the user says 修 bug,
-  出问题了怎么查, 看日志, 日志定位不到.
+  开始编码, 开始实现, Vibe Coding, 做一个编码任务, 按任务让 AI 写代码, or 任务循环. When a
+  bug's cause is still unknown, use debug-with-logs first, then come back here to
+  commit and review the fix.
 ---
 # Vibe Coding 任务循环
 
@@ -72,7 +72,7 @@ description: >-
 
 证据可以引用日志行：贴出带请求 ID 的那几行（去掉密钥和个人数据）。新加了日志时，故意触发一次错误，确认能按请求 ID 找到它。日志本身也是代码，也会写错（addyosmani/agent-skills `observability-and-instrumentation`，MIT，借思路）。
 
-**修 bug 时先读日志，再读代码。** 按请求 ID 过滤，找第一条 ERROR，看它前面的外部调用。可以把日志直接交给 agent 读，例如 `cat error.log | claude -p "what's going on here"`（[Claude Code 最佳实践](https://code.claude.com/docs/en/best-practices)）。日志定位不到问题时，先补上缺的那条日志，再修 bug。补的日志是修复的一部分，同一个 PR 提交，并写回 ARCH 事件表。OpenAI 的团队让 agent 直接查询日志、指标和链路，才能自己验证「启动在 800ms 内完成」这类要求（[Harness Engineering](https://openai.com/index/harness-engineering/)）。
+**修 bug 时先读日志，再读代码。** 原因还不清楚时，先按 `debug-with-logs` 定位（复现 → 按请求 ID 读日志 → 根因假设 → 最小修复 → 回归测试），再回到这里提交和审查。日志定位不到问题时，先补上缺的那条日志，再修 bug。补的日志是修复的一部分，同一个 PR 提交，并写回 ARCH 事件表。OpenAI 的团队让 agent 直接查询日志、指标和链路，才能自己验证「启动在 800ms 内完成」这类要求（[Harness Engineering](https://openai.com/index/harness-engineering/)）。
 
 做完判据：PR 或 `docs/evidence/` 里有命令、退出码，必要时有日志。
 
