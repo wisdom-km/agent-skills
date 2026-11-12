@@ -1,6 +1,6 @@
 # E11 版本号与 CHANGELOG
 
-档位：曳光弹 + 长期。时机：发布前。
+强制：M-13 · 原型不适用，曳光弹 SHOULD，长期 MUST（还要写明怎么退回上一版）（级别以 `project-essentials` 的 MANDATORY.md 为准）。时机：发布前。
 
 类比：药盒上的批号。出了问题，先知道是哪一批。
 
@@ -13,6 +13,10 @@
 3. 应用里能看到版本号（关于页面、`--version`、设置页），日志里带 `version` 字段（见 `debug-with-logs` 的 LOGS.md）。
 4. 每次发布写一条 CHANGELOG，模板见 [CHANGELOG.md](../templates/CHANGELOG.md)。原则：写给人看，不是给机器看；每个版本一条；同类改动放在一起；最新的在最上面；写上发布日期（[Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)）。
 5. 发布时打 tag，用带说明的 annotated tag：`git tag -a v0.4.2 -m "v0.4.2"`。它会记录创建时间、打 tag 的人和说明（[git tag](https://git-scm.com/docs/git-tag)）。
+
+## 长期：写明怎么退回上一版
+
+在 README 或发布说明里写清：出了问题，用哪条命令或哪几步回到上一个 tag 的版本；有数据迁移时，先怎么回退迁移。每次发布前确认这几步还能用。保留已发布的版本，是 NIST SSDF 的实践之一（PS.3，[SP 800-218](https://csrc.nist.gov/pubs/sp/800/218/final)）。
 
 ## 检查
 

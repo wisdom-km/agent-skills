@@ -13,6 +13,12 @@ description: >-
 ---
 # 架构护栏
 
+> **强制门禁**（本 skill 受 `project-essentials` 的 MANDATORY.md 约束）
+> 1. 开始前确认档位（原型 / 曳光弹 / 长期）和条件：[D] 存真实用户数据，[P] 别人能访问。档位不明先问；问不了按曳光弹。
+> 2. 本 skill 的关口：G2 合入门。本 skill 做的检查是 M-03、M-04、M-06、M-08、M-09 的机器证据；没接进 CI 的检查不算「已强制」。到关口输出门禁表，每项只写 PASS（附证据）/ FAIL / WAIVED / N/A。
+> 3. 任一 MUST 是 FAIL 就停下，报告「未满足：M-xx」和补法，不说「完成」。豁免只认用户原话，记进 `docs/WAIVERS.md`；红线 R-1 到 R-3 不可豁免。
+> 4. 没装 `project-essentials` 时，按项目 `AGENTS.md` 的「强制项」执行；两者都没有，先建立 MUST 清单再继续。
+
 当某条架构规则必须没有例外、应该由 linter、结构测试、CI 门禁或 agent hook 强制，而不是只写在文档里时，使用本 skill。典型对象：依赖方向、UI 不得引用 core 内部、文件大小上限、密钥不入库、生成文件不可手改。
 
 先有规则正文（通常在 `ARCHITECTURE.md` / `RULES.md`），再做本 skill。文档怎么写见 `agent-constraint-docs`。编码任务循环见 `vibe-coding-loop`。
@@ -36,15 +42,17 @@ description: >-
 2. 每条缺口选一种最小强制手段（见下）。不要一上来上重型框架。
 3. 把检查接到一条本地命令和 CI。命令写进 `AGENTS.md` 命令表。
 4. 建立「门禁改法」说明：每个门禁 ID → 问题、怎么改、规格位置。检查失败时把这段输出给 agent。
-5. 豁免只能走 ADR，并写到期日。过期后检查重新失败。
+5. 豁免只能由用户明确说出，记进 `docs/WAIVERS.md` 并写到期日；长期项目另写 ADR。过期后检查重新失败。红线（密钥进仓库等，见 MANDATORY.md R-1 到 R-3）不能豁免。
 6. 用一个故意违规的最小样例，证明门禁真的会拒绝。样例不要留在主干，可放在会失败的分支或文档里的复现步骤。
 7. 在禁止清单的「怎么拦」列填上门禁编号。未落地的必须写「未落地」，不能因「CI 全绿」被理解成已经在拦。
 
 做完判据：故意违规会被对应命令以非 0 退出码拒绝；报错里有改法；`AGENTS.md` 能找到这条命令。
 
-## 可选的强制手段（由轻到重）
+## 强制手段（由轻到重）
 
 按项目语言选择，不要把工具名写死成唯一方案。
+
+哪一档必须接哪些机器检查（例如曳光弹起 CI 是 MUST、长期要分支保护），见 `project-essentials` 的 MANDATORY.md（M-01、M-03、M-08、M-09 和第 9 节）。一条命令跑全部检查的 `scripts/check`、pre-commit、CI 工作流和 agent hook 的现成模板，会在后续版本加入本 skill。
 
 - **依赖方向 / 分层**：模块边界 linter 或结构测试。例如 JS/TS 的 dependency-cruiser、Python 的 import-linter、Java 的 ArchUnit。规则写成「谁不能 import 谁」，与 ARCH 的依赖允许表一一对应。见 [recipes/dependency-boundaries.md](recipes/dependency-boundaries.md)。
 - **文件或函数大小**：仓库内脚本，按扩展名设建议上限和硬上限。见 [recipes/file-size.md](recipes/file-size.md)。
@@ -75,5 +83,6 @@ description: >-
 - [ ] 每条硬规则要么有非 0 退出的检查，要么明确标 review
 - [ ] 报错里有改法，并指向规格
 - [ ] 至少做过一次故意违规被拒
-- [ ] 豁免带到期日
+- [ ] 豁免带到期日，记在 `docs/WAIVERS.md`（长期另有 ADR）
+- [ ] 每个检查都标了对应的 M 编号；还没接进 CI 的，门禁表里不写成「已强制」
 - [ ] 日志规则里能机器查的已接门禁，其余标了 review

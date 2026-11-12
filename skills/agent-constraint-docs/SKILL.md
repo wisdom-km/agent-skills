@@ -13,6 +13,12 @@ description: >-
 ---
 # 给 AI 的约束文档
 
+> **强制门禁**（本 skill 受 `project-essentials` 的 MANDATORY.md 约束）
+> 1. 开始前确认档位（原型 / 曳光弹 / 长期）和条件：[D] 存真实用户数据，[P] 别人能访问。档位不明先问；问不了按曳光弹。
+> 2. 本 skill 的关口：G0 开工门（把本档 MUST 写进 `AGENTS.md`「强制项」；文档写完时输出 G0 表）。到关口输出门禁表，每项只写 PASS（附证据）/ FAIL / WAIVED / N/A。
+> 3. 任一 MUST 是 FAIL 就停下，报告「未满足：M-xx」和补法，不说「完成」。豁免只认用户原话，记进 `docs/WAIVERS.md`；红线 R-1 到 R-3 不可豁免。
+> 4. 没装 `project-essentials` 时，按项目 `AGENTS.md` 的「强制项」执行；两者都没有，先建立 MUST 清单再继续。
+
 在架构已经（或正在）定下来、需要生成或更新 coding agent 会遵循的文档时使用：`AGENTS.md` / `CLAUDE.md`、PRD、ARCHITECTURE、RULES 或标准文档、执行计划、ADR、验收记录、PR 与任务模板。也用于现有 agent 文档太长、过期或互相矛盾时。
 
 还没有分流（原型 / 曳光弹 / 长期）时，先用 `architecture-from-idea`。把「不能有例外」的规则变成 lint / CI / hook 时，再用 `architecture-guardrails`。每个编码任务的执行用 `vibe-coding-loop`。
@@ -34,28 +40,35 @@ description: >-
 - **原型**：`README.md`（第一行写会扔掉）+ 短 `AGENTS.md`（命令 + 3–5 条禁止）+ `DECISIONS.md` + `PROGRESS.md`。不要搭完整体系。`AGENTS.md` 写一行「日志在哪看」，禁止里有「不吞错、不打印密钥」。
 - **曳光弹**：上面这些，加上一张依赖允许表，以及第一条端到端路径的简短 ARCH 笔记。笔记里写日志字段、请求 ID 在哪生成、怎么一路传。
 - **必备件**（三档都适用）：`project-essentials` 选出的必备件，命令写进 `AGENTS.md` 命令表，禁止项写进 RULES 禁止清单，发布前检查写进 DoD；文档里只放结论和命令，细则不抄。
+- **强制项**（三档都适用，原型也要）：`AGENTS.md` 写「强制项」一节，列出本档 MUST 编号（来自 `project-essentials` 的 MANDATORY.md）。这一节让任何 agent 每次会话都读到门禁，不依赖哪个 skill 被加载。
 - **长期**：生成本文列出的全套；长正文按节拆到 `docs/prd/`、`docs/arch/`，根文件只放索引。ARCH 写完整的日志节，RULES 写日志规则（L-xx），能查的接到门禁。
 
 ## 生成顺序
 
 1. 从已确认的架构决定收集：一句话产品、范围外、依赖规则、禁止清单、命令、质量场景。
 2. 先写 `ARCHITECTURE.md` 和 `PRD.md`（真相源），再写 `RULES.md`，最后写短 `AGENTS.md` 做路由。
-3. 补模板：`docs/adr/`、`docs/exec-plans/`、`docs/acceptance/`、`docs/evidence/`、PR 与任务模板。需要正式批准时加 `docs/approvals.md` 和 `docs/spec-changelog.md`。
-4. 每条硬规则在 RULES 或 ARCH 的「怎么拦」列写上门禁或标「review」。然后打开 `architecture-guardrails`。
-5. 做完判据：新开一个干净会话，只读 `AGENTS.md` 就能找到要读的节，并且能按命令表跑通测试。
+3. 在 `AGENTS.md` 写「强制项」一节：档位、[D] / [P]、本档 MUST 编号和一句话、全量检查命令、豁免文件 `docs/WAIVERS.md`、「任一 MUST 不满足不得说完成」。再让各工具都读到它：
+   - `CLAUDE.md` 写一行 `@AGENTS.md`（Claude Code 支持 `@path` 导入）。
+   - Cursor：`.cursor/rules/` 下放一条类型为 Always Apply 的规则，只写一句「先读 `AGENTS.md` 的强制项，按它执行」（[Cursor rules](https://cursor.com/docs/context/rules)）。
+   - Codex 在做任何工作之前读取 `AGENTS.md`（[OpenAI 文档](https://developers.openai.com/codex/guides/agents-md)），不用另加。
+4. 补模板：`docs/adr/`、`docs/exec-plans/`、`docs/acceptance/`、`docs/evidence/`、PR 与任务模板。需要正式批准时加 `docs/approvals.md` 和 `docs/spec-changelog.md`。
+5. 每条硬规则在 RULES 或 ARCH 的「怎么拦」列写上门禁或标「review」。然后打开 `architecture-guardrails`。
+6. 输出 G0 门禁表（`project-essentials` 的 `templates/GATE_REPORT.md`）。M-12（文档）和本档其他 G0 项要有证据。
+7. 做完判据：新开一个干净会话，只读 `AGENTS.md` 就能找到要读的节、说出本档 MUST，并且能按命令表跑通测试。
 
 ## AGENTS.md（或 CLAUDE.md）必须有的节
 
 1. 一句话产品 + 不是什么。
 2. 冲突优先级，并声明「本文只做指针」。
 3. 开工前必读（通常是禁止清单和 DoD 的指针）。
-4. **按任务类型读哪些节**（表格：任务类型 → 文件和节）。这是最有价值的路由表。不要要求 agent 先通读 PRD 和 ARCHITECTURE。
-5. 命令表：安装、lint、类型检查、单测（含「只跑一个文件」）、全量检查、看日志（按请求 ID 查）；最好附上次实测退出码与日期，不把旧测量改写成新的。路由表里加一行「排查 bug → 先看日志，再读 ARCH 日志节」。
-6. 禁止事项摘要，或指向 RULES 的清单。
-7. 完成标准指针（DoD）。
-8. 何时停下问人（规格冲突、范围变化、缺接口、花钱、密钥、改门禁）。
-9. 可选：容易误导的地方（看着没用其实在用的目录、不许再抄的旧模式）。
-10. 可选：子目录 `AGENTS.md` 只写本目录工具链，冲突以根为准。
+4. **强制项（MUST）**：档位、本档 MUST、全量检查命令、豁免文件、「任一 MUST 不满足不得说完成」。原型也要有这一节。
+5. **按任务类型读哪些节**（表格：任务类型 → 文件和节）。这是最有价值的路由表。不要要求 agent 先通读 PRD 和 ARCHITECTURE。
+6. 命令表：安装、lint、类型检查、单测（含「只跑一个文件」）、全量检查、看日志（按请求 ID 查）；最好附上次实测退出码与日期，不把旧测量改写成新的。路由表里加一行「排查 bug → 先看日志，再读 ARCH 日志节」。
+7. 禁止事项摘要，或指向 RULES 的清单。
+8. 完成标准指针（DoD）。
+9. 何时停下问人（规格冲突、范围变化、缺接口、花钱、密钥、改门禁）。
+10. 可选：容易误导的地方（看着没用其实在用的目录、不许再抄的旧模式）。
+11. 可选：子目录 `AGENTS.md` 只写本目录工具链，冲突以根为准。
 
 加载机制备忘：Codex 从项目根往下合并每层 `AGENTS.md`，越近越优先，默认合计上限 32 KiB（[Agents.md 指南](https://developers.openai.com/codex/guides/agents-md)）。Claude Code 没有 `CLAUDE.md` 时读 `AGENTS.md`，或用 `@AGENTS.md` 导入后再追加专属内容（[memory](https://code.claude.com/docs/en/memory)）。聊天里的明确指示覆盖文档。
 
@@ -145,7 +158,8 @@ description: >-
 ADR 五节（Michael Nygard 2011）：背景 / 选项 / 决定 / 后果 / 状态（提议 / 采纳 / 被取代）。被取代时改状态并指向新页，不在旧文追加「后来改为」。SAP §22.7 可补：证据、谁做的、为什么走捷径。见 [templates/ADR.md](templates/ADR.md)。
 
 - 任务单：关联 US/AC、切片、约束、涉及文件（标层与热点）、参照实现（要模仿的现有模块）、要做 / 不要做、验收命令与预期退出码。对应 OpenAI 的 Goal / Context / Constraints / Done when，以及「按模块 X 的方式实现」。
-- PR 模板：改了什么为什么、计划或现状理解、测试证据（命令、结果、SHA）、新边界加了哪些日志、未验证项、自审表。
+- PR 模板：改了什么为什么、计划或现状理解、测试证据（命令、结果、SHA）、新边界加了哪些日志、G2 门禁表、未验证项、自审表。
+- 豁免记录：项目的 `docs/WAIVERS.md`（空白稿在 `project-essentials` 的 `templates/WAIVERS.md`）；长期项目每条豁免另写一条 ADR。
 - 验收记录：结果只能是 PASS / FAIL / 未核实；可记密钥是否存在，不写值。
 - bug 报告：不在项目文档里另写，用 `debug-with-logs` 的 BUG_REPORT.md；需要时拷到项目的 `.github/ISSUE_TEMPLATE/bug.md`。
 - 事故复盘：无指责；时间线、影响、检测、数据是否离开本机、修复、验证；哪条日志定位了问题，缺了哪条日志、补在哪。
@@ -166,3 +180,5 @@ ADR 五节（Michael Nygard 2011）：背景 / 选项 / 决定 / 后果 / 状态
 - [ ] 没有把目录结构和架构长文抄进 AGENTS.md
 - [ ] 命令表可复制执行；未测数字标了待定标
 - [ ] ARCH 有日志节（原型至少在 `AGENTS.md` 有一行日志在哪），命令表里有看日志的命令
+- [ ] `AGENTS.md` 有「强制项」一节，列出本档 MUST；`CLAUDE.md` 有 `@AGENTS.md`；用 Cursor 时有 Always Apply 规则指向它
+- [ ] 输出了 G0 门禁表
