@@ -33,6 +33,7 @@ description: >-
 - 最重要的 1–3 个质量（快、稳、安全、易改、省钱等）
 - 预期寿命、几个人或几个 agent 会改
 - 有没有必须对接的现成系统
+- 存不存用户数据；会不会给别人用（别人能访问到）。这两问决定要不要做数据备份和安全基础（见 `project-essentials`）
 - 出了问题怎么查：谁看日志（自己、测试的人、agent、运维）；在哪看（终端、文件、日志平台）；从发现问题到定位要多快
 
 最后一问别省。项目没有日志，测试时出了错就只能猜。OWASP 也要求在需求和设计阶段就定下记什么（[OWASP Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html)「Which events to log」）。
@@ -62,6 +63,8 @@ description: >-
 出处还有：SAP §1.3「为高可改性精心设计的架构不适合一次性原型（反之亦然）」；Ousterhout《A Philosophy of Software Design》第 3 章 tactical vs strategic。作者提到策略式投入约 6–18 个月回本、持续把约 10–20% 时间投到设计上，这是作者个人判断，引用时注明。
 
 做完判据：写下选了哪一种、一句理由，用户确认。
+
+选定后打开 `project-essentials`，按这个档位挑出开工时就要做的必备件（版本控制与回滚、密钥与配置、一条命令跑和测、错误提示等），每项先做最低版。
 
 ## 第 3 步：列出驱动因素
 
