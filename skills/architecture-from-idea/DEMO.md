@@ -41,6 +41,7 @@ my-demo/
 - 所有输出去一个地方：终端，或一个日志文件。`AGENTS.md` 写一行「日志在哪看」。
 - 不吞错：不写空 catch。
 - 不打印密钥和个人数据。
+- 好坏日志对比、出错后怎么按日志查：见 `debug-with-logs`。
 
 曳光弹多做一步：第一条端到端路径就打日志。入口生成一个请求 ID，UI、seam、core、适配器每一层的日志都带上它。用一个结构化日志写法（JSON 或 key=value），以后不用重写。做完故意让这条路径出一次错，再拿请求 ID 在日志里找到整条路径。出处：addyosmani/agent-skills `observability-and-instrumentation`（MIT，借思路）：完成前先触发错误，按 requestId 在日志里找到它；[The Twelve-Factor App XI. Logs](https://12factor.net/logs)：进程只写 stdout。
 
