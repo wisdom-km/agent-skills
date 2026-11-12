@@ -54,15 +54,17 @@ tools/                    依赖方向、文件大小、文档链接、门禁改
 
 ## 绝不能省
 
+软件工程的必须项（M-01 到 M-15）按 `project-essentials` 的 MANDATORY.md「长期」列执行：每个关口输出门禁表，任一 MUST 是 FAIL 就停。下面是长期架构自己的底线，同样不能省。
+
 1. 依赖方向由机器检查，不靠自觉。没有检测机制，几年后又会在 UI 里塞满业务逻辑（Cockburn；Seemann「像推石头上山」）。OpenAI harness：自定义 linter + 结构测试。
 2. core 测试不依赖 UI，能在无界面环境跑完。
 3. 入口 / 装配文件只装配，不写业务分支。
 4. 不写模块级可变状态；不建 `utils` / `helpers` 垃圾桶目录（《Pragmatic Programmer》Tip 47）。
 5. 契约先行：接口类型单独先合入，再并行实现。
 6. 门禁失败的输出带「怎么改」（写成给 agent 的修复指令）。
-7. 豁免只能走 ADR，并带到期时间。
+7. 豁免只认用户原话：记进 `docs/WAIVERS.md`，另写一条 ADR，并带到期时间。红线 R-1 到 R-3 不能豁免。
 8. 文档与代码同一 PR 同步；要有机制查文档过期。
-9. 运行日志按 ARCH 的日志节设计并执行：结构化；请求 ID 贯穿各层；每个边界有日志；错误带上下文、不吞掉；不记密钥和个人数据；写明日志去哪、留多久。能机器检查的进门禁（`architecture-guardrails` 的 `recipes/logging.md`）。OpenAI harness 用自定义 lint 静态强制结构化日志，并让 agent 能直接查日志、指标和链路（[Harness Engineering](https://openai.com/index/harness-engineering/)）。
+9. 运行日志按 ARCH 的日志节设计并执行（M-04 长期档）：结构化；请求 ID 贯穿各层；每个边界有日志；错误带上下文、不吞掉；不记密钥和个人数据；写明日志去哪、留多久。能机器检查的进门禁（`architecture-guardrails` 的 `recipes/logging.md`）。OpenAI harness 用自定义 lint 静态强制结构化日志，并让 agent 能直接查日志、指标和链路（[Harness Engineering](https://openai.com/index/harness-engineering/)）。
 
 文档写完后，打开 `agent-constraint-docs` 和 `architecture-guardrails`。
 

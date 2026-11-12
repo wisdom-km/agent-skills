@@ -26,7 +26,7 @@ This repository will keep growing. It is not limited to the skills below.
 | [`vibe-coding-loop`](skills/vibe-coding-loop/) | 文档已经有了（或正在补），下一步按任务写代码 | 有边界的任务单、必要时的计划、实现、真实命令证据、审查 |
 | [`architecture-guardrails`](skills/architecture-guardrails/) | 某条规则不能有例外，要把文档里的规定变成机器检查 | lint、结构测试、CI 门禁或 agent hook，以及失败时的改法说明 |
 | [`debug-with-logs`](skills/debug-with-logs/) | 出了问题（报错、白屏、结果不对），原因还不知道 | 复现步骤、按 request_id 读日志得出的根因、最小修复和回归测试；一份可以直接交给 AI 的 bug 报告 |
-| [`project-essentials`](skills/project-essentials/) | 开新项目、接手项目，或准备给别人用、发布之前 | 按档位和时机勾选的必备件清单：回滚、密钥、一条命令跑和测、测试、错误提示、数据备份、依赖锁定、安全、版本号、健康检查 |
+| [`project-essentials`](skills/project-essentials/) | 开新项目、接手项目，或准备给别人用、发布之前 | 所有 Skill 共用的强制项清单（`MANDATORY.md`：MUST / SHOULD、4 个关口、门禁表、豁免）；按档位和时机勾选的必备件：回滚、密钥、一条命令跑和测、测试、错误提示、数据备份、依赖锁定、安全、版本号、健康检查 |
 
 配套文件要一起安装，不要只拷 `SKILL.md`：
 
@@ -35,7 +35,7 @@ This repository will keep growing. It is not limited to the skills below.
 - `architecture-guardrails`：`recipes/` 下的检查配方（含 `recipes/logging.md` 日志检查）
 - `vibe-coding-loop`：只有 `SKILL.md`
 - `debug-with-logs`：`WORKFLOW.md`（12 步定位流程）、`LOGS.md`（好日志长什么样、最少字段、各平台日志在哪看）、`BUG_REPORT.md`（bug 报告模板）
-- `project-essentials`：`essentials/` 下每个必备件一个短文件，`templates/` 下有 `.env.example` 和 `CHANGELOG.md`
+- `project-essentials`：`MANDATORY.md`（所有 Skill 共用的强制项、关口和豁免规则）；`essentials/` 下每个必备件一个短文件；`templates/` 下有 `.env.example`、`CHANGELOG.md`、`GATE_REPORT.md`（门禁表）、`WAIVERS.md`（豁免记录）
 
 ### 运行日志：从定架构就开始提醒
 
@@ -49,22 +49,52 @@ This repository will keep growing. It is not limited to the skills below.
 
 ### 软件必备件：不只是日志
 
-日志之外，真实软件还有一些基础件，缺了就容易出大事：改坏了回不去、密钥进了仓库被人刷爆、数据库被误删没有备份。`project-essentials` 把它们按项目档位和时机列成一张表：
+日志之外，真实软件还有一些基础件，缺了就容易出大事：改坏了回不去、密钥进了仓库被人刷爆、数据库被误删没有备份。`project-essentials` 把它们按项目档位和时机列成一张表（级别以 MANDATORY.md 为准，见下一节）：
 
-| 必备件 | 档位 |
-| --- | --- |
-| 版本控制与回滚 | 必备 |
-| 密钥与配置（`.env` / `.env.example`） | 必备 |
-| 一条命令跑、测、构建，README 能照着跑 | 必备 |
-| 冒烟测试 + 每个 bug 一条回归测试 | 曳光弹 + 长期必备；原型建议有冒烟 |
-| 错误处理与用户看到的错误信息（人话 + 错误编号） | 必备 |
-| 数据安全：备份、恢复演练、迁移、AI 不碰正式数据 | 存了用户数据就必备 |
-| 依赖锁定 | 锁文件必备；审计为长期 |
-| 安全基础（新手版 8 条） | 别人能访问就必备 |
-| 版本号与 CHANGELOG | 曳光弹 + 长期 |
-| 健康检查与崩溃上报 | 可选，上线后建议 |
+| 必备件 | 原型 | 曳光弹 | 长期 |
+| --- | --- | --- | --- |
+| 版本控制与回滚 | MUST | MUST | MUST |
+| 密钥与配置（`.env` / `.env.example`） | MUST（红线） | MUST | MUST |
+| 一条命令跑、测、构建，README 能照着跑 | MUST | MUST | MUST |
+| 冒烟测试 + 每个 bug 一条回归测试 | SHOULD | MUST | MUST |
+| 错误处理与用户看到的错误信息（人话 + 错误编号） | MUST | MUST | MUST |
+| 数据安全：备份、恢复演练、迁移、AI 不碰正式数据 | 存了用户数据就 MUST | 同左 | 同左 |
+| 依赖锁定 | MUST | MUST | MUST（+ 审计） |
+| 安全基础（新手版 8 条） | 别人能访问就 MUST | 同左 | 同左（+ ASVS L1 自查 SHOULD） |
+| 版本号、CHANGELOG、回滚办法 | — | SHOULD | MUST |
+| 健康检查与崩溃上报 | — | SHOULD | 别人能访问就 MUST |
 
 其他 Skill 只在对应的那一步提醒你打开它：`architecture-from-idea` 选完路径后、`agent-constraint-docs` 写命令表和 DoD 时、`vibe-coding-loop` 每个任务收尾时、`architecture-guardrails` 做密钥和危险路径检查时。
+
+### 强制项与门禁：从定架构就开始，不能跳
+
+类比：飞机起飞前的检查单。不是凭感觉「应该都弄好了」，而是在固定的时刻逐项打勾；有一项没过，就不起飞。
+
+正式说法：[`project-essentials/MANDATORY.md`](skills/project-essentials/MANDATORY.md) 是所有 Skill 共用的必须项清单（M-01 到 M-15）。每项按档位标 **MUST**（不满足就停）、**SHOULD**（要报告，但不停）或 **—**（不适用）。agent 在 4 个关口必须输出门禁表；任一 MUST 不满足，就不能说「完成」，不能合入，不能发布。
+
+**每档的 MUST：**
+
+| 档位 | MUST |
+| --- | --- |
+| 原型（Demo，7 项） | 版本控制（M-01）、一条命令跑 + README（M-02）、密钥不进仓库（M-03）、最小日志（M-04）、不吞错（M-05）、提交前 AI 用人话讲改动（M-07）、锁文件（M-09） |
+| 曳光弹（10 项） | M-01 到 M-09（加强版：结构化日志 + request_id、冒烟 + 回归测试、独立 AI 审查、CI），加 M-12 决定和架构笔记 |
+| 长期（11 项） | 曳光弹的全部（再加强），加 M-13 版本号、CHANGELOG 和回滚办法 |
+
+条件项：存了真实用户数据 [D] 时，三档都加 M-11 数据安全；别人能访问 [P] 时，三档都加 M-10 安全 8 条，长期再加 M-14 健康检查与错误上报，并建议做 OWASP ASVS L1 自查。原型的冒烟测试（M-06）是建议，不强制，但门禁表里要报告。
+
+**档位不明时：** 先问；问不了，按曳光弹执行，并在门禁表里写明。
+
+**4 个关口：** G0 开工前（选完档位、写业务代码之前）；G1 任务完成前；G2 合入前；G3 发布前。门禁表每项只能是 PASS（附证据：命令和退出码、提交号、文件路径、日志行）、FAIL、WAIVED、N/A。
+
+**豁免：** 只认用户的原话，记进项目的 `docs/WAIVERS.md`；长期项目另写一条 ADR。agent 不能自己豁免。
+
+**3 条红线，任何情况都不能豁免：** 密钥不进仓库；不对真实用户数据做没有备份的不可逆操作；不编造测试或检查结果。
+
+**6 个 Skill 怎么接上：** 每个 Skill 顶部有同一段「强制门禁」；`agent-constraint-docs` 的 `AGENTS.md` 模板有「强制项」一节，让任何 agent 每次会话都读到（`CLAUDE.md` 用 `@AGENTS.md` 导入；Cursor 用一条 Always Apply 规则指向它）；`vibe-coding-loop` 收尾时必须输出门禁表；PR 模板有 G2 门禁表。
+
+**诚实的限度：** 这些都是给 AI 的文字指令，AI 可能不照做。真正拦得住的只有 CI 必需检查、hook 和分支保护。一条命令跑全部检查的 `scripts/check`、pre-commit、CI 工作流和 agent hook 的模板会在后续版本加入 `architecture-guardrails`，现在还没有。Claude Code 的 Stop hook 可以阻止 agent 在检查失败时结束（官方文档已写明）；Cursor 的 `stop` hook 能不能阻止结束、Codex 有没有等价的 hook，都还没核实。
+
+依据（只借思路）：Microsoft Engineering Fundamentals Checklist 与 Definition of Done、Software Engineering at Google（代码审查、测试、CI）、Google SRE 发布检查清单、OpenAI Harness engineering、Claude Code best practices、DORA、NIST SSDF、OWASP ASVS。链接见 MANDATORY.md 第 10 节。
 
 ### 它们怎么配合（可插拔）
 
@@ -181,7 +211,11 @@ Claude 会按 `description` 自动选用，也可以输入 `/architecture-from-i
 
 > 这是一个新项目，会存用户数据，会给别人用。请按 project-essentials，列出现在必须做的必备件，每项先做最低版。
 
-> 准备发布了。请按 project-essentials 的「发布前」检查，逐项给出 PASS / FAIL / 未核实和证据。
+> 准备发布了。请按 project-essentials 的 G3 发布门，输出门禁表，逐项给出 PASS / FAIL / WAIVED / N/A 和证据。
+
+**任务做完、要合入时：**
+
+> 这个任务做完了吗？请按 vibe-coding-loop 第 7 步输出 G1 门禁表；任一 MUST 是 FAIL 就别说完成，先告诉我怎么补。
 
 也可以不提英文名，直接说「还没定架构」「从想法开始」「怎么分层」「下一步写文档」「开始编码」「下一步做门禁」「日志怎么设计」「出错了」「白屏」「修 bug」「日志在哪」「新项目要准备什么」「上线前检查」「怎么回滚」「密钥放哪」。这些短语已经写在各 Skill 的触发说明里。
 
@@ -279,9 +313,9 @@ Claude 会按 `description` 自动选用，也可以输入 `/architecture-from-i
 
 **先问两件事：** 存不存用户数据？会不会给别人用？这决定数据安全和安全基础要不要做。
 
-**怎么用：** 总表按档位（原型 / 曳光弹 / 长期）和时机（开工 / 每个任务 / 发布前）列出 10 项必备件。每项一个短文件，第一节是「最低版」，原型只做最低版。结果写进项目：命令进 `AGENTS.md` 命令表，禁止项进 RULES，发布前检查进 DoD。
+**怎么用：** `MANDATORY.md` 是强制项的唯一真相源（M-01 到 M-15、3 条红线、4 个关口、门禁表、豁免）。总表按档位（原型 / 曳光弹 / 长期）列出 10 项必备件的 MUST / SHOULD，每项一个短文件，第一节是「最低版」，原型只做最低版。开工时过 G0，发布前过 G3；G1、G2 由 `vibe-coding-loop` 触发。结果写进项目：`AGENTS.md` 的「强制项」一节和命令表，禁止项进 RULES，门禁进 DoD。用户说「这一条先不做」时，照抄原话记进 `docs/WAIVERS.md`。
 
-**做完的样子：** 按档位选出的每一项都做了最低版，或写了「未做」和原因；新命令真的跑过；发布前检查每项都是 PASS / FAIL / 未核实。
+**做完的样子：** 本档每个 MUST 都是 PASS（附证据）或 WAIVED（有用户原话）；新命令真的跑过；对应关口有门禁表；有 MUST 是 FAIL 时没有说「完成」或「可以发布」。
 
 不推荐具体厂商。运行日志和定位 bug 不在这里，见 `architecture-from-idea` 和 `debug-with-logs`。
 
@@ -293,6 +327,7 @@ Claude 会按 `description` 自动选用，也可以输入 `/architecture-from-i
 - OpenAI 自己也说明：端到端自治高度依赖那个仓库的结构和工具，不要假设能直接推广。
 - 原型和长期项目不要混用方法：为高可改性设计的架构，不适合一次性原型，反过来也一样。
 - 不要把 Skill 正文整份复制进业务仓库；项目里只放生成出来的 `AGENTS.md`、PRD、ARCHITECTURE 等文档。
+- 「强制」在文档层只是让 agent 自己停下并报告，AI 可能不照做。真正拦得住的是 CI 必需检查、hook 和分支保护；这些模板会在后续版本加入。
 
 ### 仓库结构
 
@@ -347,7 +382,7 @@ Together they form a pluggable workflow from “I only have an idea” to “an 
 | [`vibe-coding-loop`](skills/vibe-coding-loop/) | Docs are already in place (or being written) and the next step is to implement one task | A scoped brief, a plan when needed, implementation, real command evidence, and review |
 | [`architecture-guardrails`](skills/architecture-guardrails/) | A rule must hold with no exceptions and should become a machine check | A linter, structural test, CI gate, or agent hook, plus fix-it guidance on failure |
 | [`debug-with-logs`](skills/debug-with-logs/) | Something is broken (an error, a blank screen, wrong output) and the cause is not known yet | Repro steps, a root cause read from the logs by request_id, a minimal fix with a regression test, and a bug report you can hand to the AI |
-| [`project-essentials`](skills/project-essentials/) | Starting or taking over a project, or before sharing or releasing it | A checklist of software basics by tier and moment: rollback, secrets, one-command run and test, tests, error messages, data backup, dependency lockfiles, security, version numbers, health checks |
+| [`project-essentials`](skills/project-essentials/) | Starting or taking over a project, or before sharing or releasing it | The mandatory-item list shared by all skills (`MANDATORY.md`: MUST / SHOULD, four gates, gate table, waivers); software basics by tier and moment: rollback, secrets, one-command run and test, tests, error messages, data backup, dependency lockfiles, security, version numbers, health checks |
 
 Install the helper files too, not only `SKILL.md`:
 
@@ -356,7 +391,7 @@ Install the helper files too, not only `SKILL.md`:
 - `architecture-guardrails`: recipes in `recipes/` (including `recipes/logging.md` for logging checks)
 - `vibe-coding-loop`: `SKILL.md` only
 - `debug-with-logs`: `WORKFLOW.md` (12-step flow), `LOGS.md` (what a useful log line looks like, minimum fields, where logs live on each platform), `BUG_REPORT.md` (bug report template)
-- `project-essentials`: one short file per essential in `essentials/`, plus `.env.example` and `CHANGELOG.md` in `templates/`
+- `project-essentials`: `MANDATORY.md` (mandatory items, gates, and waiver rules shared by all skills); one short file per essential in `essentials/`; `.env.example`, `CHANGELOG.md`, `GATE_REPORT.md` (gate table), and `WAIVERS.md` (waiver log) in `templates/`
 
 ### Runtime logging: prompted from the architecture stage
 
@@ -370,22 +405,52 @@ Without logs, a failure found in testing leaves you guessing. So these skills re
 
 ### Software essentials: more than logging
 
-Beyond logging, real software needs a few basics. Without them, small mistakes become big ones: a bad change you cannot undo, a key pushed to the repo and abused, a database deleted with no backup. `project-essentials` lists them by project tier and by moment:
+Beyond logging, real software needs a few basics. Without them, small mistakes become big ones: a bad change you cannot undo, a key pushed to the repo and abused, a database deleted with no backup. `project-essentials` lists them by project tier and by moment (MANDATORY.md is the source of truth for levels; see the next section):
 
-| Essential | Tier |
-| --- | --- |
-| Version control and rollback | Required |
-| Secrets and config (`.env` / `.env.example`) | Required |
-| One-command run, test, and build; a README you can follow | Required |
-| A smoke test, plus one regression test per bug | Required for tracer bullet and long-lived; smoke test recommended for prototypes |
-| Error handling and user-facing error messages (plain words plus an error ID) | Required |
-| Data safety: backups, a restore drill, migrations, no agent access to production data | Required once you store user data |
-| Dependency lockfiles | Lockfile required; audits for long-lived projects |
-| Security basics (8 beginner items) | Required once other people can reach it |
-| Version numbers and CHANGELOG | Tracer bullet and long-lived |
-| Health checks and crash reporting | Optional; recommended after launch |
+| Essential | Prototype | Tracer bullet | Long-lived |
+| --- | --- | --- | --- |
+| Version control and rollback | MUST | MUST | MUST |
+| Secrets and config (`.env` / `.env.example`) | MUST (red line) | MUST | MUST |
+| One-command run, test, and build; a README you can follow | MUST | MUST | MUST |
+| A smoke test, plus one regression test per bug | SHOULD | MUST | MUST |
+| Error handling and user-facing error messages (plain words plus an error ID) | MUST | MUST | MUST |
+| Data safety: backups, a restore drill, migrations, no agent access to production data | MUST once you store user data | same | same |
+| Dependency lockfiles | MUST | MUST | MUST (+ audits) |
+| Security basics (8 beginner items) | MUST once other people can reach it | same | same (+ ASVS L1 self-check SHOULD) |
+| Version numbers, CHANGELOG, rollback procedure | — | SHOULD | MUST |
+| Health checks and crash reporting | — | SHOULD | MUST once other people can reach it |
 
 The other skills only point to it at the matching step: `architecture-from-idea` after choosing a path, `agent-constraint-docs` when writing the command table and DoD, `vibe-coding-loop` at the end of each task, and `architecture-guardrails` when adding secret and dangerous-path checks.
+
+### Mandatory items and gates: enforced from the architecture stage
+
+Everyday picture: a pre-flight checklist. You do not take off because things "should be fine"; you tick each item at fixed moments, and if one fails, the plane stays on the ground.
+
+Formal version: [`project-essentials/MANDATORY.md`](skills/project-essentials/MANDATORY.md) is the single list of mandatory items shared by all skills (M-01 to M-15). Each item is marked per tier as **MUST** (stop if not met), **SHOULD** (report it, but do not stop), or **—** (not applicable). At four gates the agent must output a gate table; if any MUST is not met, it may not say "done", merge, or release.
+
+**MUST items per tier:**
+
+| Tier | MUST |
+| --- | --- |
+| Prototype (demo, 7 items) | Version control (M-01), one-command run + README (M-02), no secrets in the repo (M-03), minimal logging (M-04), no swallowed errors (M-05), the AI explains each change in plain words before commit (M-07), a committed lockfile (M-09) |
+| Tracer bullet (10 items) | M-01 to M-09 in stronger form (structured logs with request_id, smoke + regression tests, independent AI review, CI), plus M-12 decisions and architecture notes |
+| Long-lived (11 items) | Everything in tracer bullet (stronger again), plus M-13 version numbers, CHANGELOG, and a rollback procedure |
+
+Conditional items: if the project stores real user data [D], all tiers add M-11 data safety; if other people can reach it [P], all tiers add M-10 (the 8 security basics), and long-lived projects also add M-14 health checks and error reporting, with an OWASP ASVS L1 self-check recommended. A prototype smoke test (M-06) is recommended, not required, but its status must appear in the gate table.
+
+**Tier unknown:** ask first; if you cannot ask, use the tracer-bullet tier and say so in the gate table.
+
+**Four gates:** G0 before feature code (after choosing the tier); G1 before a task is called done; G2 before merge; G3 before release. Each row of the gate table is exactly one of PASS (with evidence: command and exit code, commit, file path, log line), FAIL, WAIVED, or N/A.
+
+**Waivers:** only the user's explicit words count. They go in the project's `docs/WAIVERS.md`; long-lived projects also write an ADR. The agent cannot waive anything on its own.
+
+**Three red lines, never waivable:** no secrets in the repo; no irreversible operation on real user data without a backup; never fabricate test or check results.
+
+**How the six skills hook in:** each skill starts with the same "mandatory gate" block; the `AGENTS.md` template in `agent-constraint-docs` has a "Mandatory items" section so every agent reads it each session (`CLAUDE.md` imports it with `@AGENTS.md`; Cursor uses one Always Apply rule that points to it); `vibe-coding-loop` must output the gate table before finishing; the PR template has a G2 gate table.
+
+**Honest limit:** all of this is written instruction to an AI, and an AI can ignore it. Only required CI checks, hooks, and branch protection truly block. Templates for a one-command `scripts/check`, pre-commit, a CI workflow, and agent hooks will be added to `architecture-guardrails` in a later version; they are not here yet. Claude Code's Stop hook can block the agent from finishing when checks fail (stated in its docs); whether Cursor's `stop` hook can block finishing, and whether Codex has an equivalent hook, are not verified.
+
+Sources (ideas only, no copied text): Microsoft Engineering Fundamentals Checklist and Definition of Done, Software Engineering at Google (code review, testing, CI), the Google SRE launch checklist, OpenAI Harness engineering, Claude Code best practices, DORA, NIST SSDF, and OWASP ASVS. Links are in section 10 of MANDATORY.md.
 
 ### How they fit together (pluggable)
 
@@ -502,7 +567,11 @@ After installation, start a chat with wording close to the skill descriptions. T
 
 > This is a new project. It will store user data and other people will use it. Follow project-essentials: list the essentials I must do now, and do the minimum version of each first.
 
-> We are about to release. Follow the project-essentials before-release check and give PASS / FAIL / unverified with evidence for each item.
+> We are about to release. Follow the project-essentials G3 release gate: output the gate table with PASS / FAIL / WAIVED / N/A and evidence for each item.
+
+**When a task is finished or ready to merge:**
+
+> Is this task done? Follow step 7 of vibe-coding-loop and output the G1 gate table. If any MUST fails, do not call it done; tell me how to fix it first.
 
 You can also speak in Chinese trigger phrases already listed in each skill’s `description`, such as「还没定架构」,「下一步写文档」,「开始编码」,「下一步做门禁」, or「日志怎么设计」. English phrases such as "how should we design logging", "observability", "fix this bug", "where are the logs", "before release checklist", "how do I roll back", or "where do secrets go" also match.
 
@@ -600,9 +669,9 @@ Failure output should be a repair instruction for the agent, and should point at
 
 **Ask two things first:** does it store user data, and will other people use it? That decides whether data safety and security basics are required.
 
-**How:** the main table lists 10 essentials by tier (prototype / tracer bullet / long-lived) and by moment (project start / every task / before release). Each has a short file whose first section is the minimum version; a prototype only does the minimum. Record the results in the project: commands in the `AGENTS.md` command table, prohibitions in RULES, and the before-release check in the DoD.
+**How:** `MANDATORY.md` is the single source of mandatory items (M-01 to M-15, three red lines, four gates, the gate table, waivers). The main table lists MUST / SHOULD per tier (prototype / tracer bullet / long-lived) for 10 essentials. Each has a short file whose first section is the minimum version; a prototype only does the minimum. Run G0 at project start and G3 before release; `vibe-coding-loop` runs G1 and G2. Record the results in the project: the "Mandatory items" section and command table in `AGENTS.md`, prohibitions in RULES, and the gates in the DoD. When the user says "skip this one for now", copy their exact words into `docs/WAIVERS.md`.
 
-**Done when:** every essential picked for the tier has its minimum version, or is marked "not done" with a reason; new commands were actually run; every before-release item is PASS / FAIL / unverified.
+**Done when:** every MUST for the tier is PASS (with evidence) or WAIVED (with the user's words); new commands were actually run; the matching gate has a gate table; nothing was called "done" or "ready to release" while a MUST failed.
 
 No vendor recommendations. Runtime logging and bug locating live in `architecture-from-idea` and `debug-with-logs`, not here.
 
@@ -614,6 +683,7 @@ No vendor recommendations. Runtime logging and bug locating live in `architectur
 - OpenAI also notes that end-to-end autonomy depends heavily on that repository’s structure and tools; do not assume the same setup generalizes.
 - Do not mix prototype methods with long-lived-product methods. An architecture designed for change is a poor fit for a throwaway prototype, and the reverse is also true.
 - Do not copy a skill’s full body into an application repo. Put the generated project docs (`AGENTS.md`, PRD, ARCHITECTURE, and so on) in the project instead.
+- "Mandatory" at the document level only makes the agent stop and report; an AI can still ignore it. Only required CI checks, hooks, and branch protection truly block. Templates for those come in a later version.
 
 ### Structure
 

@@ -5,13 +5,21 @@ description: >-
   (or is getting) agent docs: turn the request into a scoped task (goal,
   context, constraints, done-when), plan first if non-trivial, implement inside
   the architecture, verify with real commands, review against the spec, and feed
-  repeated mistakes back into docs or checks. Also when documents are already in
-  place and the next step is to code, or the user says 文档已经有了, 下一步写代码, 下一步是实现,
-  开始编码, 开始实现, Vibe Coding, 做一个编码任务, 按任务让 AI 写代码, or 任务循环. When a
+  repeated mistakes back into docs or checks; before saying a task is done or
+  merging, output the gate table and stop if any MUST fails. Also when documents
+  are already in place and the next step is to code, or the user says 文档已经有了,
+  下一步写代码, 下一步是实现, 开始编码, 开始实现, Vibe Coding, 做一个编码任务, 按任务让 AI 写代码,
+  任务循环, 做完了吗, 可以提交了吗, 可以合入了吗, is it done, ready to merge. When a
   bug's cause is still unknown, use debug-with-logs first, then come back here to
   commit and review the fix.
 ---
 # Vibe Coding 任务循环
+
+> **强制门禁**（本 skill 受 `project-essentials` 的 MANDATORY.md 约束）
+> 1. 开始前确认档位（原型 / 曳光弹 / 长期）和条件：[D] 存真实用户数据，[P] 别人能访问。档位不明先问；问不了按曳光弹。
+> 2. 本 skill 的关口：G1 任务完成门（说「完成」之前）；G2 合入门（合入 main 之前）。到关口输出门禁表，每项只写 PASS（附证据）/ FAIL / WAIVED / N/A。
+> 3. 任一 MUST 是 FAIL 就停下，报告「未满足：M-xx」和补法，不说「完成」。豁免只认用户原话，记进 `docs/WAIVERS.md`；红线 R-1 到 R-3 不可豁免。
+> 4. 没装 `project-essentials` 时，按项目 `AGENTS.md` 的「强制项」执行；两者都没有，先建立 MUST 清单再继续。
 
 仓库里已经有（或正在写）给 AI 的文档时，每做一个编码任务就用本 skill。把请求收成有边界的任务，该计划的先计划，在既定架构里实现，用真实命令验证，对照规格审查，并把重复错误写回文档或检查。
 
@@ -21,7 +29,10 @@ description: >-
 
 ## 开始前先读什么
 
-先读 `AGENTS.md` 的路由表，只打开当前任务类型指出的节。不要通读全部规格。若 `AGENTS.md` 不存在，停下来补文档，或明确这是原型并只遵守 README 里的几条禁止。
+先读 `AGENTS.md` 的「强制项」一节（档位、[D] / [P]、本档 MUST、全量检查命令、豁免文件），再读路由表，只打开当前任务类型指出的节。不要通读全部规格。
+
+- `AGENTS.md` 不存在：停下来补文档，或明确这是原型并只遵守 README 里的几条禁止。
+- `AGENTS.md` 没有「强制项」：先跑 G0（按 `project-essentials` 的 MANDATORY.md 选出本档 MUST），写进 `AGENTS.md`，再开始任务。档位不明先问；问不了按曳光弹。
 
 ## 1. 写任务单
 
@@ -30,7 +41,7 @@ description: >-
 - **Goal**：做成什么
 - **Context**：相关文件、组件、要模仿的现有模块路径、「按模块 X 的方式实现」
 - **Constraints**：不要做什么、不要扩大范围、架构禁令。任务碰到新边界（入口、适配器、外部调用）时，写明要加哪些日志（按 ARCH 日志节）
-- **Done when**：可观察的验收，以及要跑的命令和预期退出码
+- **Done when**：可观察的验收，以及要跑的命令和预期退出码；加上「G1 门禁表里本档 MUST 全部是 PASS 或 WAIVED」
 
 有 UI 或交互时，说明「修好长什么样」。两种合理方案都说得通时，先由人选定。出处：[How OpenAI uses Codex](https://openai.com/business/guides-and-resources/how-openai-uses-codex/)；[Claude Code 最佳实践](https://code.claude.com/docs/en/best-practices)。
 
@@ -64,7 +75,9 @@ description: >-
 
 ## 5. 用真实命令验证
 
-给 AI 一条能返回通过 / 失败的检查。要求证据：跑了什么命令、输出是什么。不接受「全部通过」一句话。
+给 AI 一条能返回通过 / 失败的检查。要求证据：跑了什么命令、输出是什么。不接受「全部通过」一句话。编造测试或检查结果是红线 R-3，任何情况下都不行。
+
+命令表里有全量检查命令时就跑它，退出码就是 G1 的证据。一条命令跑全部检查的 `scripts/check` 模板会在后续版本加入 `architecture-guardrails`；在那之前，逐条跑命令表里的测试和检查。
 
 能像真实用户一样做端到端检查时就做（例如浏览器），不要只跑单测就标完成（Anthropic 长任务 harness）。
 
@@ -82,11 +95,19 @@ description: >-
 
 OpenAI 建议用审查工作流，并且可以在离代码近的 `AGENTS.md` 里放代码审查规则。
 
-## 7. 收尾
+## 7. 收尾：过门禁（G1，要合入时再过 G2）
 
-提交；更新进度文件；保持主干或功能分支可合入。验收结果只写 PASS / FAIL / 未核实。
+这一步是强制的。不过门禁，不说「完成」，不合入。
 
-提交前让 AI 用人话讲这次 diff：改了什么、为什么、可能影响什么；讲不清就不提交。再对照 `project-essentials` 总表「每个任务」那一列（存档点、错误提示、新密钥、新依赖）。
+1. 提交前让 AI 用人话讲这次 diff：改了什么、为什么、可能影响什么；讲不清就不提交（M-07）。
+2. 按 `project-essentials` 的 MANDATORY.md，列出本档、本关口要查的编号。G1 一般是 M-01、M-03、M-04、M-05、M-06（原型还有 M-07）；G2 再加 M-07、M-08、M-09、M-12。没有 PR 的项目，G2 的项在提交前随 G1 一起查。
+3. 输出门禁表（空白稿：`project-essentials` 的 `templates/GATE_REPORT.md`）。每项只能是 **PASS（附证据）/ FAIL / WAIVED / N/A**。证据是命令和退出码、提交号、文件路径、日志行。没有证据就写 FAIL。
+4. 任一 MUST 是 FAIL：结论写「未满足（M-xx）」。**不说「完成」「好了」「可以合入」**，不合入。写出补法，并主动提出去做；补完重跑整张表。
+5. SHOULD 是 FAIL：在结论里列出，可以继续。
+6. 用户说「这一条先不做」：照抄原话记进 `docs/WAIVERS.md`，表里写 WAIVED 和编号。没有用户原话，不能写 WAIVED。红线 R-1 到 R-3 不能豁免。
+7. 全部 MUST 是 PASS 或 WAIVED 后：提交；更新进度文件；把门禁表贴进 PR 描述或 `docs/evidence/`；保持主干或功能分支可合入。
+
+限度：这张表靠 agent 自觉。真正拦得住的是 CI 必需检查、分支保护和 hook（`architecture-guardrails`）。
 
 ## 8. 把重复错误写回去
 
@@ -114,3 +135,5 @@ OpenAI 建议用审查工作流，并且可以在离代码近的 `AGENTS.md` 里
 - [ ] 没有一次做多个切片
 - [ ] 重复错误已写回文档或检查
 - [ ] 新边界有日志、带请求 ID；修 bug 时先读了日志，缺的日志已补上
+- [ ] 输出了 G1 门禁表（要合入时还有 G2）；每个 PASS 都有证据；有 MUST 是 FAIL 时没有说「完成」
+- [ ] 每个 WAIVED 都在 `docs/WAIVERS.md` 里有用户原话

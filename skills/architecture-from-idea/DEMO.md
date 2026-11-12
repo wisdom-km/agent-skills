@@ -22,7 +22,7 @@
 ```
 my-demo/
   README.md          第一行：原型或曳光弹；用途；会不会扔；一条启动命令
-  AGENTS.md          ≤30 行：怎么跑、怎么测、3–5 条禁止
+  AGENTS.md          ≤30 行：怎么跑、怎么测、3–5 条禁止、强制项（本档 7 项 MUST）
   DECISIONS.md       每行：日期 | 决定 | 理由
   PROGRESS.md        做到哪了、下一步
   src/
@@ -31,6 +31,9 @@ my-demo/
   tests/
     smoke.test.*     一条端到端或核心规则测试
   .gitignore         含 .env
+  .env.example       只写变量名，不写真值
+  锁文件             例如 package-lock.json、poetry.lock；要提交
+  docs/WAIVERS.md    有豁免时才建：用户原话、豁免哪一条、何时复查
 ```
 
 ## 最小日志
@@ -45,20 +48,30 @@ my-demo/
 
 曳光弹多做一步：第一条端到端路径就打日志。入口生成一个请求 ID，UI、seam、core、适配器每一层的日志都带上它。用一个结构化日志写法（JSON 或 key=value），以后不用重写。做完故意让这条路径出一次错，再拿请求 ID 在日志里找到整条路径。出处：addyosmani/agent-skills `observability-and-instrumentation`（MIT，借思路）：完成前先触发错误，按 requestId 在日志里找到它；[The Twelve-Factor App XI. Logs](https://12factor.net/logs)：进程只写 stdout。
 
-原型可以不写测试（mattpocock/skills `prototype`：目的是尽快学到东西）。曳光弹至少留 1 条冒烟，再加几条核心规则单测。决策用一个 `DECISIONS.md` 列表即可，不必上完整 ADR 流程。
+原型建议留一条能重复跑的冒烟检查（脚本也行）。这是 SHOULD：不做不会停，但门禁表里要写出来（M-06）。原型的目的是尽快学到东西（mattpocock/skills `prototype`），不要求更多测试。曳光弹的测试是 MUST：至少 1 条冒烟，再加几条核心规则单测，每修一个 bug 一条回归测试。决策用一个 `DECISIONS.md` 列表即可，不必上完整 ADR 流程（M-12：原型 SHOULD，曳光弹 MUST）。
 
 ## 绝不能省（即使明天就扔）
 
-1. 版本控制，频繁提交（《Pragmatic Programmer》Tip 28；Anthropic 长任务 harness 用 git 回退坏改动）。
-2. 一条命令能跑起来，一条命令能测。[OpenAI 常见错误](https://learn.chatgpt.com/guides/best-practices)：不告诉 agent 怎么构建和测试。
-3. 密钥不进仓库、不进日志。
-4. 写明「这是原型」，避免被人当成能上线的代码（Topic 13）。
-5. 业务规则和 UI / IO 分开放。
-6. 决定写下来，哪怕一行（SAP §22.7）。
-7. 原型结束时把结论写回：哪个问题、答案是什么、证据（mattpocock `prototype`：Capture it when done）。
-8. 出错时带上下文打印到一个能看到的地方，不吞错（见上面「最小日志」）。
+原型的 7 项 MUST（编号见 `project-essentials` 的 MANDATORY.md）。G0 和每次提交前，按这几项输出门禁表；任一项是 FAIL 就停下补齐：
+
+1. **M-01** 版本控制，每个能跑的小步提交一次（《Pragmatic Programmer》Tip 28；Anthropic 长任务 harness 用 git 回退坏改动）。
+2. **M-02** 一条命令能跑起来；有测试时一条命令能测。README 第一行写「原型，会扔掉」和启动命令，避免被人当成能上线的代码（Topic 13）。[OpenAI 常见错误](https://learn.chatgpt.com/guides/best-practices)：不告诉 agent 怎么构建和测试。
+3. **M-03** 密钥不进仓库、不进日志（红线 R-1，不可豁免）。
+4. **M-04** 出错时带上下文打印到一个能看到的地方（见上面「最小日志」）。
+5. **M-05** 不吞错，出错时用户能看到提示。
+6. **M-07** 提交前让 AI 用人话讲这次改了什么、为什么、可能影响什么；你能复述才提交。
+7. **M-09** 锁文件已提交。
+
+条件项：存了真实用户数据 [D] 时加 M-11（不对真实数据做没有备份的不可逆操作，红线 R-2）；别人能访问 [P] 时加 M-10（安全 8 条）。
+
+原型自己的架构底线（不进门禁表，照样要做）：
+
+- 业务规则和 UI / IO 分开放。
+- 原型结束时把结论写回：哪个问题、答案是什么、证据（mattpocock `prototype`：Capture it when done）。
+
+建议项（SHOULD，门禁表里要报告状态）：M-06 一条冒烟检查；M-12 决定写进 `DECISIONS.md`，哪怕一行（SAP §22.7）；M-08 CI。
 
 ## 退出
 
 - 原型：答案写进决定，代码扔掉或放到单独分支，不要默默留在主干。
-- 曳光弹：转长期之前，补一次 Iteration 0（第 3–5 步），包括第 4 步的日志决定，再补机器检查。
+- 曳光弹：转长期之前，补一次 Iteration 0（第 3–5 步），包括第 4 步的日志决定，再补机器检查。按长期档重跑一次 G0 门禁表；`docs/WAIVERS.md` 里写着「转长期前复查」的豁免，这时恢复为 MUST。

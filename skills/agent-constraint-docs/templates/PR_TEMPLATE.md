@@ -23,6 +23,16 @@
 - ARCH §10 事件表已更新：是 / 不需要
 - 必要时贴一条带 request_id 的日志行（不含密钥和个人数据）：
 
+## 门禁 G2（合入前）
+
+档位：_ · [D] 是 / 否 · [P] 是 / 否。规则见 `project-essentials` 的 MANDATORY.md 第 6 节。
+
+| 编号 | 级别 | 状态 | 证据 |
+| --- | --- | --- | --- |
+| M-__ | MUST / SHOULD | PASS / FAIL / WAIVED / N/A | 命令和退出码、提交号、CI 链接；WAIVED 写 W-___ |
+
+结论：满足 / 未满足（M-__）。任一 MUST 是 FAIL，本 PR 不合入。
+
 ## Agent 工作记录（若由 agent 实现）
 
 读了哪些规格；关键决定；踩过的坑。

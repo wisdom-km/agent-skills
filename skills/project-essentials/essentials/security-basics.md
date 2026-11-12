@@ -1,6 +1,6 @@
 # E10 安全基础（新手版 8 条）
 
-档位：条件必备，只要别人能访问到（网站、接口、发布的扩展或应用）。时机：开工；发布前。
+强制：M-10 · [P] 三档都 MUST，只要别人能访问到（网站、接口、发布的扩展或应用）；长期另做 OWASP ASVS L1 自查，为 SHOULD（级别以 `project-essentials` 的 MANDATORY.md 为准）。时机：开工；发布前。
 
 类比：开店要锁门、收银台要有人看着，不能假设「顾客都会自觉」。
 
@@ -21,7 +21,11 @@
 
 第 5 条的做法参考了 addyosmani/agent-skills `security-and-hardening`（MIT，借思路），具体额度按项目定。
 
+## 长期 + 对外：ASVS L1 自查（SHOULD）
+
+8 条是 MUST。长期项目且别人能访问时，再对照 OWASP ASVS 的 Level 1 自查一遍。ASVS 把 L1 定为保护应用的最低要求（[OWASP ASVS](https://owasp.org/www-project-application-security-verification-standard/)）。这是 SHOULD：结果写进 G3 门禁表，没做完不拦发布。
+
 ## 检查
 
 - 机器：密钥扫描；依赖审计；lint 禁止 `eval` 和把变量拼进 `innerHTML`；权限测试：用户 A 读用户 B 的数据，应当被拒绝。
-- 人：发布前逐条过一遍，每条写 PASS / FAIL / 未核实。
+- 人：发布前逐条过一遍，每条写 PASS（附证据）/ FAIL / N/A；未核实按 FAIL 算。结果写进 G3 门禁表。
