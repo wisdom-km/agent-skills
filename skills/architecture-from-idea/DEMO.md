@@ -48,7 +48,7 @@ my-demo/
 
 曳光弹多做一步：第一条端到端路径就打日志。入口生成一个请求 ID，UI、seam、core、适配器每一层的日志都带上它。用一个结构化日志写法（JSON 或 key=value），以后不用重写。做完故意让这条路径出一次错，再拿请求 ID 在日志里找到整条路径。出处：addyosmani/agent-skills `observability-and-instrumentation`（MIT，借思路）：完成前先触发错误，按 requestId 在日志里找到它；[The Twelve-Factor App XI. Logs](https://12factor.net/logs)：进程只写 stdout。
 
-原型建议留一条能重复跑的冒烟检查（脚本也行）。这是 SHOULD：不做不会停，但门禁表里要写出来（M-06）。原型的目的是尽快学到东西（mattpocock/skills `prototype`），不要求更多测试。曳光弹的测试是 MUST：至少 1 条冒烟，再加几条核心规则单测，每修一个 bug 一条回归测试。决策用一个 `DECISIONS.md` 列表即可，不必上完整 ADR 流程（M-12：原型 SHOULD，曳光弹 MUST）。
+原型建议留一条能重复跑的冒烟检查（脚本也行）。这是 SHOULD：不做不会停，但门禁表里要写出来（M-06）。已经写了测试却失败时，按 MUST 处理：先修好再说完成。原型的目的是尽快学到东西（mattpocock/skills `prototype`），不要求更多测试。曳光弹的测试是 MUST：至少 1 条冒烟，再加几条核心规则单测，每修一个 bug 一条回归测试。决策用一个 `DECISIONS.md` 列表即可，不必上完整 ADR 流程（M-12：原型 SHOULD，曳光弹 MUST）。
 
 ## 绝不能省（即使明天就扔）
 

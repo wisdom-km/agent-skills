@@ -1,6 +1,6 @@
 # E6 冒烟测试 + 每个 bug 一条回归测试
 
-强制：M-06 · 原型 SHOULD（建议一条冒烟检查，不做不停，但门禁表里要报告），曳光弹 MUST，长期 MUST（级别以 `project-essentials` 的 MANDATORY.md 为准）。不编造测试结果是红线 R-3。时机：开工；每修一个 bug。
+强制：M-06 · 原型 SHOULD（建议一条冒烟检查，不做不停，但门禁表里要报告；已有测试却失败时按 MUST，挡住），曳光弹 MUST，长期 MUST（级别以 `project-essentials` 的 MANDATORY.md 为准）。不编造测试结果是红线 R-3。时机：开工；每修一个 bug。
 
 类比：出门前摸一下口袋：钥匙、手机、钱包。不全面，但能挡住最常见的大错。
 

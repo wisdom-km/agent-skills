@@ -32,7 +32,7 @@ This repository will keep growing. It is not limited to the skills below.
 
 - `architecture-from-idea`：`DEMO.md`（原型细则）、`LONG.md`（长期项目细则）、`PRINCIPLES.md`（需要向人解释术语时再读）
 - `agent-constraint-docs`：`templates/` 下的空白模板
-- `architecture-guardrails`：`recipes/` 下的检查配方（含 `recipes/logging.md` 日志检查）
+- `architecture-guardrails`：`recipes/` 下的检查配方（含 `recipes/logging.md` 日志检查、`recipes/mandatory-gates.md` 强制门禁装法）；`templates/project/` 是复制进项目的门禁模板（`scripts/check`、pre-commit、CI、agent Stop hook）
 - `vibe-coding-loop`：只有 `SKILL.md`
 - `debug-with-logs`：`WORKFLOW.md`（12 步定位流程）、`LOGS.md`（好日志长什么样、最少字段、各平台日志在哪看）、`BUG_REPORT.md`（bug 报告模板）
 - `project-essentials`：`MANDATORY.md`（所有 Skill 共用的强制项、关口和豁免规则）；`essentials/` 下每个必备件一个短文件；`templates/` 下有 `.env.example`、`CHANGELOG.md`、`GATE_REPORT.md`（门禁表）、`WAIVERS.md`（豁免记录）
@@ -56,7 +56,7 @@ This repository will keep growing. It is not limited to the skills below.
 | 版本控制与回滚 | MUST | MUST | MUST |
 | 密钥与配置（`.env` / `.env.example`） | MUST（红线） | MUST | MUST |
 | 一条命令跑、测、构建，README 能照着跑 | MUST | MUST | MUST |
-| 冒烟测试 + 每个 bug 一条回归测试 | SHOULD | MUST | MUST |
+| 冒烟测试 + 每个 bug 一条回归测试 | SHOULD（已有测试失败时挡住） | MUST | MUST |
 | 错误处理与用户看到的错误信息（人话 + 错误编号） | MUST | MUST | MUST |
 | 数据安全：备份、恢复演练、迁移、AI 不碰正式数据 | 存了用户数据就 MUST | 同左 | 同左 |
 | 依赖锁定 | MUST | MUST | MUST（+ 审计） |
@@ -80,7 +80,7 @@ This repository will keep growing. It is not limited to the skills below.
 | 曳光弹（10 项） | M-01 到 M-09（加强版：结构化日志 + request_id、冒烟 + 回归测试、独立 AI 审查、CI），加 M-12 决定和架构笔记 |
 | 长期（11 项） | 曳光弹的全部（再加强），加 M-13 版本号、CHANGELOG 和回滚办法 |
 
-条件项：存了真实用户数据 [D] 时，三档都加 M-11 数据安全；别人能访问 [P] 时，三档都加 M-10 安全 8 条，长期再加 M-14 健康检查与错误上报，并建议做 OWASP ASVS L1 自查。原型的冒烟测试（M-06）是建议，不强制，但门禁表里要报告。
+条件项：存了真实用户数据 [D] 时，三档都加 M-11 数据安全；别人能访问 [P] 时，三档都加 M-10 安全 8 条，长期再加 M-14 健康检查与错误上报，并建议做 OWASP ASVS L1 自查。原型的冒烟测试（M-06）是建议：没写不挡，但门禁表里要报告；已经有测试却失败时，原型也挡住。
 
 **档位不明时：** 先问；问不了，按曳光弹执行，并在门禁表里写明。
 
@@ -92,7 +92,7 @@ This repository will keep growing. It is not limited to the skills below.
 
 **6 个 Skill 怎么接上：** 每个 Skill 顶部有同一段「强制门禁」；`agent-constraint-docs` 的 `AGENTS.md` 模板有「强制项」一节，让任何 agent 每次会话都读到（`CLAUDE.md` 用 `@AGENTS.md` 导入；Cursor 用一条 Always Apply 规则指向它）；`vibe-coding-loop` 收尾时必须输出门禁表；PR 模板有 G2 门禁表。
 
-**诚实的限度：** 这些都是给 AI 的文字指令，AI 可能不照做。真正拦得住的只有 CI 必需检查、hook 和分支保护。一条命令跑全部检查的 `scripts/check`、pre-commit、CI 工作流和 agent hook 的模板会在后续版本加入 `architecture-guardrails`，现在还没有。Claude Code 的 Stop hook 可以阻止 agent 在检查失败时结束（官方文档已写明）；Cursor 的 `stop` hook 能不能阻止结束、Codex 有没有等价的 hook，都还没核实。
+**诚实的限度：** 这些都是给 AI 的文字指令，AI 可能不照做。真正拦得住的只有 CI 必需检查、hook 和分支保护。这些现成模板在 `architecture-guardrails` 的 `templates/project/`：一条命令跑全部机器检查的 `scripts/check`（另有 PowerShell 版）、pre-commit 配置、GitHub Actions CI、Claude Code / Cursor / Codex 的 Stop hook、Cursor 的 Always Apply 规则；装法和分支保护步骤见 `recipes/mandatory-gates.md`。项目装上并在 GitHub 开了必需检查之后，才算机器强制。各 agent 的 hook 都已对照官方文档核实：Claude Code 和 Codex 的 Stop hook 能让 agent 接着改；Cursor 的 stop hook 不能阻止结束，只能自动发一条后续消息让它继续。
 
 依据（只借思路）：Microsoft Engineering Fundamentals Checklist 与 Definition of Done、Software Engineering at Google（代码审查、测试、CI）、Google SRE 发布检查清单、OpenAI Harness engineering、Claude Code best practices、DORA、NIST SSDF、OWASP ASVS。链接见 MANDATORY.md 第 10 节。
 
@@ -289,6 +289,8 @@ Claude 会按 `description` 自动选用，也可以输入 `/architecture-from-i
 
 **工作步骤：** 收集硬规则并找出缺口 → 选一种最小强制手段（先别上重型框架）→ 接到一条本地命令和 CI，并写进 `AGENTS.md` 命令表 → 为每个门禁准备「问题 / 怎么改 / 规格在哪」的改法说明 → 豁免只能走 ADR，并写到期日 → 用一个故意违规的最小样例证明门禁真的会拒绝（样例不要留在主干）。
 
+**现成模板：** `templates/project/` 整个目录复制进项目，填 `scripts/check.conf`（档位、启动 / 测试 / 安装命令），就有一条命令 `scripts/check` 按档位检查密钥（R-1）、锁文件、README、空 catch、测试、CI 等能机器查的 MUST 项；再接 pre-commit、CI 和分支保护。步骤见 `recipes/mandatory-gates.md`。
+
 检查失败时的报错要写成给 agent 的修复指令，并指向规格位置。还没接到 CI 的门禁必须标明「未落地」，不能因为「CI 全绿」就被理解成已经在拦。
 
 **不要做的：** 不要用门禁规定无关紧要的库或执行风格偏好；不要照搬「门禁越少越好、agent 自己合入」（那只适合极高吞吐的团队，在低吞吐环境里并不合适）；不要为了过门禁而削弱规则原文。
@@ -327,7 +329,7 @@ Claude 会按 `description` 自动选用，也可以输入 `/architecture-from-i
 - OpenAI 自己也说明：端到端自治高度依赖那个仓库的结构和工具，不要假设能直接推广。
 - 原型和长期项目不要混用方法：为高可改性设计的架构，不适合一次性原型，反过来也一样。
 - 不要把 Skill 正文整份复制进业务仓库；项目里只放生成出来的 `AGENTS.md`、PRD、ARCHITECTURE 等文档。
-- 「强制」在文档层只是让 agent 自己停下并报告，AI 可能不照做。真正拦得住的是 CI 必需检查、hook 和分支保护；这些模板会在后续版本加入。
+- 「强制」在文档层只是让 agent 自己停下并报告，AI 可能不照做。真正拦得住的是 CI 必需检查、hook 和分支保护；模板在 `architecture-guardrails` 的 `templates/project/`，要在项目里装上才生效。
 
 ### 仓库结构
 
@@ -388,7 +390,7 @@ Install the helper files too, not only `SKILL.md`:
 
 - `architecture-from-idea`: `DEMO.md` (prototype path), `LONG.md` (long-lived path), `PRINCIPLES.md` (read when you need to explain terms to a person)
 - `agent-constraint-docs`: blank templates in `templates/`
-- `architecture-guardrails`: recipes in `recipes/` (including `recipes/logging.md` for logging checks)
+- `architecture-guardrails`: recipes in `recipes/` (including `recipes/logging.md` for logging checks and `recipes/mandatory-gates.md` for setting up the mandatory gates); `templates/project/` holds copy-in gate templates (`scripts/check`, pre-commit, CI, agent Stop hooks)
 - `vibe-coding-loop`: `SKILL.md` only
 - `debug-with-logs`: `WORKFLOW.md` (12-step flow), `LOGS.md` (what a useful log line looks like, minimum fields, where logs live on each platform), `BUG_REPORT.md` (bug report template)
 - `project-essentials`: `MANDATORY.md` (mandatory items, gates, and waiver rules shared by all skills); one short file per essential in `essentials/`; `.env.example`, `CHANGELOG.md`, `GATE_REPORT.md` (gate table), and `WAIVERS.md` (waiver log) in `templates/`
@@ -412,7 +414,7 @@ Beyond logging, real software needs a few basics. Without them, small mistakes b
 | Version control and rollback | MUST | MUST | MUST |
 | Secrets and config (`.env` / `.env.example`) | MUST (red line) | MUST | MUST |
 | One-command run, test, and build; a README you can follow | MUST | MUST | MUST |
-| A smoke test, plus one regression test per bug | SHOULD | MUST | MUST |
+| A smoke test, plus one regression test per bug | SHOULD (an existing failing test blocks) | MUST | MUST |
 | Error handling and user-facing error messages (plain words plus an error ID) | MUST | MUST | MUST |
 | Data safety: backups, a restore drill, migrations, no agent access to production data | MUST once you store user data | same | same |
 | Dependency lockfiles | MUST | MUST | MUST (+ audits) |
@@ -436,7 +438,7 @@ Formal version: [`project-essentials/MANDATORY.md`](skills/project-essentials/MA
 | Tracer bullet (10 items) | M-01 to M-09 in stronger form (structured logs with request_id, smoke + regression tests, independent AI review, CI), plus M-12 decisions and architecture notes |
 | Long-lived (11 items) | Everything in tracer bullet (stronger again), plus M-13 version numbers, CHANGELOG, and a rollback procedure |
 
-Conditional items: if the project stores real user data [D], all tiers add M-11 data safety; if other people can reach it [P], all tiers add M-10 (the 8 security basics), and long-lived projects also add M-14 health checks and error reporting, with an OWASP ASVS L1 self-check recommended. A prototype smoke test (M-06) is recommended, not required, but its status must appear in the gate table.
+Conditional items: if the project stores real user data [D], all tiers add M-11 data safety; if other people can reach it [P], all tiers add M-10 (the 8 security basics), and long-lived projects also add M-14 health checks and error reporting, with an OWASP ASVS L1 self-check recommended. A prototype smoke test (M-06) is recommended: having none does not block, but its status must appear in the gate table. If a prototype has tests and they fail, that blocks.
 
 **Tier unknown:** ask first; if you cannot ask, use the tracer-bullet tier and say so in the gate table.
 
@@ -448,7 +450,7 @@ Conditional items: if the project stores real user data [D], all tiers add M-11 
 
 **How the six skills hook in:** each skill starts with the same "mandatory gate" block; the `AGENTS.md` template in `agent-constraint-docs` has a "Mandatory items" section so every agent reads it each session (`CLAUDE.md` imports it with `@AGENTS.md`; Cursor uses one Always Apply rule that points to it); `vibe-coding-loop` must output the gate table before finishing; the PR template has a G2 gate table.
 
-**Honest limit:** all of this is written instruction to an AI, and an AI can ignore it. Only required CI checks, hooks, and branch protection truly block. Templates for a one-command `scripts/check`, pre-commit, a CI workflow, and agent hooks will be added to `architecture-guardrails` in a later version; they are not here yet. Claude Code's Stop hook can block the agent from finishing when checks fail (stated in its docs); whether Cursor's `stop` hook can block finishing, and whether Codex has an equivalent hook, are not verified.
+**Honest limit:** all of this is written instruction to an AI, and an AI can ignore it. Only required CI checks, hooks, and branch protection truly block. Ready-made templates for those are in `templates/project/` of `architecture-guardrails`: a one-command `scripts/check` (plus a PowerShell version), a pre-commit config, a GitHub Actions CI workflow, Stop hooks for Claude Code, Cursor, and Codex, and a Cursor Always Apply rule. Setup and branch-protection steps are in `recipes/mandatory-gates.md`. A project is machine-enforced only after it installs them and turns on the required check on GitHub. Each agent hook was checked against the official docs: Claude Code and Codex Stop hooks can send the agent back to work; Cursor's stop hook cannot block finishing, it can only auto-submit a follow-up message.
 
 Sources (ideas only, no copied text): Microsoft Engineering Fundamentals Checklist and Definition of Done, Software Engineering at Google (code review, testing, CI), the Google SRE launch checklist, OpenAI Harness engineering, Claude Code best practices, DORA, NIST SSDF, and OWASP ASVS. Links are in section 10 of MANDATORY.md.
 
@@ -645,6 +647,8 @@ Start from the written rules (usually in `ARCHITECTURE.md` / `RULES.md`), then u
 
 **Steps:** collect hard rules and find gaps → pick the lightest enforcement that works (do not start with a heavy framework) → hook it to one local command and to CI, and list that command in `AGENTS.md` → write fix-it notes for each gate (what failed, how to fix it, where the rule lives) → allow exemptions only through an ADR with an expiry date → prove the gate actually rejects a minimal intentional violation (do not leave that sample on the main branch).
 
+**Ready-made templates:** copy the whole `templates/project/` folder into the project and fill in `scripts/check.conf` (tier, run / test / install commands). One command, `scripts/check`, then checks the machine-checkable MUST items for that tier: secrets (R-1), lockfiles, README, empty catch, tests, CI. Then connect pre-commit, CI, and branch protection. Steps are in `recipes/mandatory-gates.md`.
+
 Failure output should be a repair instruction for the agent, and should point at the spec. Gates that are not in CI yet must be marked as not landed, so a green CI run is not read as “everything is already enforced.”
 
 **Do not:** use gates to mandate an incidental library or a style preference; copy a “fewer gates, and the agent merges its own PRs” policy (that tradeoff is for very high-throughput teams and is a poor fit elsewhere); or weaken the written rule just to make a gate pass.
@@ -683,7 +687,7 @@ No vendor recommendations. Runtime logging and bug locating live in `architectur
 - OpenAI also notes that end-to-end autonomy depends heavily on that repository’s structure and tools; do not assume the same setup generalizes.
 - Do not mix prototype methods with long-lived-product methods. An architecture designed for change is a poor fit for a throwaway prototype, and the reverse is also true.
 - Do not copy a skill’s full body into an application repo. Put the generated project docs (`AGENTS.md`, PRD, ARCHITECTURE, and so on) in the project instead.
-- "Mandatory" at the document level only makes the agent stop and report; an AI can still ignore it. Only required CI checks, hooks, and branch protection truly block. Templates for those come in a later version.
+- "Mandatory" at the document level only makes the agent stop and report; an AI can still ignore it. Only required CI checks, hooks, and branch protection truly block. Their templates are in `templates/project/` of `architecture-guardrails` and take effect only once a project installs them.
 
 ### Structure
 
