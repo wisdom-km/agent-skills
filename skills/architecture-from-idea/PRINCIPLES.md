@@ -57,6 +57,19 @@
 - 日常：战术式像赶作业抄近路，以后要加倍还。原型是草稿纸，用完扔掉。曳光弹是先打一发真子弹看弹道，这支枪留下继续用。
 - 正式：技术债会复利。《APOSD》第 3 章。原型为学习，必须标明一次性；曳光弹是端到端骨架，留下再长大。《Pragmatic Programmer》Topic 12/13。
 
+## 运行日志与可观测性
+
+- 日常：飞机上有黑匣子。飞机出了事，调查员不用猜，打开黑匣子看最后几分钟发生了什么。医院有病历。换一个医生，翻病历就知道病人做过什么检查、吃过什么药。程序的日志就是它的黑匣子和病历。没有日志的程序出了错，你只能猜。每页病历都写着同一个病历号，所以能把一个病人的所有记录串起来。日志里的请求 ID 就是这个病历号。
+- 正式：可观测性指不了解内部也能从外部问出「为什么会这样」。前提是程序充分埋点，排查时不必再临时加日志（[OpenTelemetry Observability primer](https://opentelemetry.io/docs/concepts/observability-primer/)）。三种信号：
+  - 日志（logs）：带时间戳的一条事件记录。适合回答「这次具体发生了什么」。
+  - 指标（metrics）：一段时间内的数字汇总，例如错误率、请求速率。适合回答「整体正常吗」。Google SRE 的四个黄金信号是延迟、流量、错误、饱和度（[Google SRE Book 第 6 章](https://sre.google/sre-book/monitoring-distributed-systems/)）。
+  - 链路（traces）：一个请求穿过各层、各服务的完整路径。由多个 span 组成。
+  - 结构化日志：字段名和类型固定，机器能可靠解析。只是 JSON 还不够（[OpenTelemetry Logs](https://opentelemetry.io/docs/concepts/signals/logs/)）。
+  - 关联 ID：同一次操作的所有日志带同一个 ID（trace ID 或请求 ID），跨服务一路传递（[OpenTelemetry Context propagation](https://opentelemetry.io/docs/concepts/context-propagation/)）。
+  - 级别：TRACE、DEBUG、INFO、WARN、ERROR、FATAL，各有含义（[OpenTelemetry Logs Data Model](https://opentelemetry.io/docs/specs/otel/logs/data-model/)）。
+  - 日志是事件流：程序只写 stdout，存储和转发交给运行环境（[The Twelve-Factor App XI. Logs](https://12factor.net/logs)）。
+  - 不能进日志的东西：密码、token、session 值、连接串、加密密钥、个人敏感数据（[OWASP Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html)「Data to exclude」）。
+
 ## Harness、上下文工程、两类约束
 
 - 日常：Harness 是给助手准备的工作台：地图、工具、检查清单。上下文是助手桌上的位置，桌面有限，只放高信号的纸。有的规矩写在便条上（助手自己决定听不听），有的装成门锁（每次都会拦住）。

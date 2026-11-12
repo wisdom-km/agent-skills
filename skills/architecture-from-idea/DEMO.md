@@ -33,6 +33,17 @@ my-demo/
   .gitignore         含 .env
 ```
 
+## 最小日志
+
+原型不必搭日志系统，但出错时要能看出错在哪：
+
+- 出错时打印出来，带上下文：哪个操作、相关 ID 或输入、错误原因。只打一句「失败了」不够。
+- 所有输出去一个地方：终端，或一个日志文件。`AGENTS.md` 写一行「日志在哪看」。
+- 不吞错：不写空 catch。
+- 不打印密钥和个人数据。
+
+曳光弹多做一步：第一条端到端路径就打日志。入口生成一个请求 ID，UI、seam、core、适配器每一层的日志都带上它。用一个结构化日志写法（JSON 或 key=value），以后不用重写。做完故意让这条路径出一次错，再拿请求 ID 在日志里找到整条路径。出处：addyosmani/agent-skills `observability-and-instrumentation`（MIT，借思路）：完成前先触发错误，按 requestId 在日志里找到它；[The Twelve-Factor App XI. Logs](https://12factor.net/logs)：进程只写 stdout。
+
 原型可以不写测试（mattpocock/skills `prototype`：目的是尽快学到东西）。曳光弹至少留 1 条冒烟，再加几条核心规则单测。决策用一个 `DECISIONS.md` 列表即可，不必上完整 ADR 流程。
 
 ## 绝不能省（即使明天就扔）
@@ -44,8 +55,9 @@ my-demo/
 5. 业务规则和 UI / IO 分开放。
 6. 决定写下来，哪怕一行（SAP §22.7）。
 7. 原型结束时把结论写回：哪个问题、答案是什么、证据（mattpocock `prototype`：Capture it when done）。
+8. 出错时带上下文打印到一个能看到的地方，不吞错（见上面「最小日志」）。
 
 ## 退出
 
 - 原型：答案写进决定，代码扔掉或放到单独分支，不要默默留在主干。
-- 曳光弹：转长期之前，补一次 Iteration 0（第 3–5 步），再补机器检查。
+- 曳光弹：转长期之前，补一次 Iteration 0（第 3–5 步），包括第 4 步的日志决定，再补机器检查。
