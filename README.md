@@ -26,6 +26,7 @@ This repository will keep growing. It is not limited to the skills below.
 | [`vibe-coding-loop`](skills/vibe-coding-loop/) | 文档已经有了（或正在补），下一步按任务写代码 | 有边界的任务单、必要时的计划、实现、真实命令证据、审查 |
 | [`architecture-guardrails`](skills/architecture-guardrails/) | 某条规则不能有例外，要把文档里的规定变成机器检查 | lint、结构测试、CI 门禁或 agent hook，以及失败时的改法说明 |
 | [`debug-with-logs`](skills/debug-with-logs/) | 出了问题（报错、白屏、结果不对），原因还不知道 | 复现步骤、按 request_id 读日志得出的根因、最小修复和回归测试；一份可以直接交给 AI 的 bug 报告 |
+| [`project-essentials`](skills/project-essentials/) | 开新项目、接手项目，或准备给别人用、发布之前 | 按档位和时机勾选的必备件清单：回滚、密钥、一条命令跑和测、测试、错误提示、数据备份、依赖锁定、安全、版本号、健康检查 |
 
 配套文件要一起安装，不要只拷 `SKILL.md`：
 
@@ -34,6 +35,7 @@ This repository will keep growing. It is not limited to the skills below.
 - `architecture-guardrails`：`recipes/` 下的检查配方（含 `recipes/logging.md` 日志检查）
 - `vibe-coding-loop`：只有 `SKILL.md`
 - `debug-with-logs`：`WORKFLOW.md`（12 步定位流程）、`LOGS.md`（好日志长什么样、最少字段、各平台日志在哪看）、`BUG_REPORT.md`（bug 报告模板）
+- `project-essentials`：`essentials/` 下每个必备件一个短文件，`templates/` 下有 `.env.example` 和 `CHANGELOG.md`
 
 ### 运行日志：从定架构就开始提醒
 
@@ -44,6 +46,25 @@ This repository will keep growing. It is not limited to the skills below.
 - `vibe-coding-loop`：新代码跨边界时加日志；修 bug 先读日志；日志定位不到时，先补日志再修。
 - `architecture-guardrails`：`recipes/logging.md` 列出哪些日志规则能机器检查（core 禁裸 print、禁空 catch、日志不记密钥、出错时必须有一条带 request_id 和堆栈的 ERROR 等），哪些只能 review。
 - `debug-with-logs`：出了 bug 时，一步一步教你复现、找到日志、按错误编号（request_id）过滤、读出断在哪一层，再让 AI 先给根因假设、后修改。`LOGS.md` 有好坏日志对比和各平台（网页、服务端、浏览器扩展、桌面、命令行、iOS、Android、React Native、Flutter）日志位置。
+
+### 软件必备件：不只是日志
+
+日志之外，真实软件还有一些基础件，缺了就容易出大事：改坏了回不去、密钥进了仓库被人刷爆、数据库被误删没有备份。`project-essentials` 把它们按项目档位和时机列成一张表：
+
+| 必备件 | 档位 |
+| --- | --- |
+| 版本控制与回滚 | 必备 |
+| 密钥与配置（`.env` / `.env.example`） | 必备 |
+| 一条命令跑、测、构建，README 能照着跑 | 必备 |
+| 冒烟测试 + 每个 bug 一条回归测试 | 曳光弹 + 长期必备；原型建议有冒烟 |
+| 错误处理与用户看到的错误信息（人话 + 错误编号） | 必备 |
+| 数据安全：备份、恢复演练、迁移、AI 不碰正式数据 | 存了用户数据就必备 |
+| 依赖锁定 | 锁文件必备；审计为长期 |
+| 安全基础（新手版 8 条） | 别人能访问就必备 |
+| 版本号与 CHANGELOG | 曳光弹 + 长期 |
+| 健康检查与崩溃上报 | 可选，上线后建议 |
+
+其他 Skill 只在对应的那一步提醒你打开它：`architecture-from-idea` 选完路径后、`agent-constraint-docs` 写命令表和 DoD 时、`vibe-coding-loop` 每个任务收尾时、`architecture-guardrails` 做密钥和危险路径检查时。
 
 ### 它们怎么配合（可插拔）
 
@@ -57,6 +78,7 @@ flowchart LR
   C -.-> D
   C -. 出了 bug .-> E["debug-with-logs<br/>用日志定位"]
   E -. 修好后提交 .-> C
+  A -. 选完路径 .-> F["project-essentials<br/>按档位勾选必备件"]
 ```
 
 - 还没定架构，或要从想法走完全流程：从 `architecture-from-idea` 开始。
@@ -64,6 +86,7 @@ flowchart LR
 - 文档已经有了，下一步写代码：直接用 `vibe-coding-loop`。每一次编码任务用一次，不要在一个对话里做整个项目。
 - 规则已经写在 ARCH / RULES 里，下一步做门禁：直接用 `architecture-guardrails`。循环里同一错误犯了两次、文档仍然管不住时，也可以再打开它。
 - 出了 bug、原因还不知道：用 `debug-with-logs`。任何阶段都可以用，不必先走前面几步。
+- 开新项目、接手项目、准备发布：用 `project-essentials` 勾选必备件。
 
 不必全都用。已经有架构就不必从想法重来；只做会扔掉的原型时，用 `architecture-from-idea` 的原型路径，不要搭完整文档体系和全套门禁。
 
@@ -87,6 +110,7 @@ cp -R agent-skills/skills/architecture-from-idea \
       agent-skills/skills/vibe-coding-loop \
       agent-skills/skills/architecture-guardrails \
       agent-skills/skills/debug-with-logs \
+      agent-skills/skills/project-essentials \
       <你的 skills 目录>/
 ```
 
@@ -153,7 +177,13 @@ Claude 会按 `description` 自动选用，也可以输入 `/architecture-from-i
 
 > 点「保存」后报错了，错误编号是 r-7f3a9c。请按 debug-with-logs：先别改代码，先帮我找到日志、读出断在哪一层，告诉我根因假设和证据行。
 
-也可以不提英文名，直接说「还没定架构」「从想法开始」「怎么分层」「下一步写文档」「开始编码」「下一步做门禁」「日志怎么设计」「出错了」「白屏」「修 bug」「日志在哪」。这些短语已经写在各 Skill 的触发说明里。
+**开工或发布前查必备件：**
+
+> 这是一个新项目，会存用户数据，会给别人用。请按 project-essentials，列出现在必须做的必备件，每项先做最低版。
+
+> 准备发布了。请按 project-essentials 的「发布前」检查，逐项给出 PASS / FAIL / 未核实和证据。
+
+也可以不提英文名，直接说「还没定架构」「从想法开始」「怎么分层」「下一步写文档」「开始编码」「下一步做门禁」「日志怎么设计」「出错了」「白屏」「修 bug」「日志在哪」「新项目要准备什么」「上线前检查」「怎么回滚」「密钥放哪」。这些短语已经写在各 Skill 的触发说明里。
 
 ### 各 Skill 的具体用法
 
@@ -243,6 +273,18 @@ Claude 会按 `description` 自动选用，也可以输入 `/architecture-from-i
 
 **做完的样子：** 根因有日志或复现作证据；改动只针对根因；有一条修之前失败、修完通过的回归测试；缺的日志已补上并写进 ARCH 事件表。
 
+#### 6. project-essentials：软件必备件
+
+**适用：** 开新项目、接手项目，或准备给别人用、发布之前。也适用于问「密钥放哪」「AI 改坏了怎么回滚」「要不要备份」「版本号怎么定」。
+
+**先问两件事：** 存不存用户数据？会不会给别人用？这决定数据安全和安全基础要不要做。
+
+**怎么用：** 总表按档位（原型 / 曳光弹 / 长期）和时机（开工 / 每个任务 / 发布前）列出 10 项必备件。每项一个短文件，第一节是「最低版」，原型只做最低版。结果写进项目：命令进 `AGENTS.md` 命令表，禁止项进 RULES，发布前检查进 DoD。
+
+**做完的样子：** 按档位选出的每一项都做了最低版，或写了「未做」和原因；新命令真的跑过；发布前检查每项都是 PASS / FAIL / 未核实。
+
+不推荐具体厂商。运行日志和定位 bug 不在这里，见 `architecture-from-idea` 和 `debug-with-logs`。
+
 ### 使用时请记住的限度
 
 - 自动选用不是工作流引擎。做完架构后，请在下一句明确说「下一步写文档」或点名 Skill。
@@ -305,6 +347,7 @@ Together they form a pluggable workflow from “I only have an idea” to “an 
 | [`vibe-coding-loop`](skills/vibe-coding-loop/) | Docs are already in place (or being written) and the next step is to implement one task | A scoped brief, a plan when needed, implementation, real command evidence, and review |
 | [`architecture-guardrails`](skills/architecture-guardrails/) | A rule must hold with no exceptions and should become a machine check | A linter, structural test, CI gate, or agent hook, plus fix-it guidance on failure |
 | [`debug-with-logs`](skills/debug-with-logs/) | Something is broken (an error, a blank screen, wrong output) and the cause is not known yet | Repro steps, a root cause read from the logs by request_id, a minimal fix with a regression test, and a bug report you can hand to the AI |
+| [`project-essentials`](skills/project-essentials/) | Starting or taking over a project, or before sharing or releasing it | A checklist of software basics by tier and moment: rollback, secrets, one-command run and test, tests, error messages, data backup, dependency lockfiles, security, version numbers, health checks |
 
 Install the helper files too, not only `SKILL.md`:
 
@@ -313,6 +356,7 @@ Install the helper files too, not only `SKILL.md`:
 - `architecture-guardrails`: recipes in `recipes/` (including `recipes/logging.md` for logging checks)
 - `vibe-coding-loop`: `SKILL.md` only
 - `debug-with-logs`: `WORKFLOW.md` (12-step flow), `LOGS.md` (what a useful log line looks like, minimum fields, where logs live on each platform), `BUG_REPORT.md` (bug report template)
+- `project-essentials`: one short file per essential in `essentials/`, plus `.env.example` and `CHANGELOG.md` in `templates/`
 
 ### Runtime logging: prompted from the architecture stage
 
@@ -323,6 +367,25 @@ Without logs, a failure found in testing leaves you guessing. So these skills re
 - `vibe-coding-loop`: new code that crosses a boundary adds logs; bug fixes start by reading logs; if logs could not locate the bug, add the missing log first, then fix.
 - `architecture-guardrails`: `recipes/logging.md` lists which logging rules can be machine-checked (no bare print in core, no empty catch, no secrets in logs, one ERROR with request_id and stack when an operation fails, and so on) and which stay review-only.
 - `debug-with-logs`: when a bug shows up, walks you step by step through reproducing it, finding the logs, filtering by the error ID (request_id), and reading which layer broke, then asks the AI for a root-cause hypothesis before any change. `LOGS.md` has good-versus-bad log examples and log locations for web, server, browser extension, desktop, CLI, iOS, Android, React Native, and Flutter.
+
+### Software essentials: more than logging
+
+Beyond logging, real software needs a few basics. Without them, small mistakes become big ones: a bad change you cannot undo, a key pushed to the repo and abused, a database deleted with no backup. `project-essentials` lists them by project tier and by moment:
+
+| Essential | Tier |
+| --- | --- |
+| Version control and rollback | Required |
+| Secrets and config (`.env` / `.env.example`) | Required |
+| One-command run, test, and build; a README you can follow | Required |
+| A smoke test, plus one regression test per bug | Required for tracer bullet and long-lived; smoke test recommended for prototypes |
+| Error handling and user-facing error messages (plain words plus an error ID) | Required |
+| Data safety: backups, a restore drill, migrations, no agent access to production data | Required once you store user data |
+| Dependency lockfiles | Lockfile required; audits for long-lived projects |
+| Security basics (8 beginner items) | Required once other people can reach it |
+| Version numbers and CHANGELOG | Tracer bullet and long-lived |
+| Health checks and crash reporting | Optional; recommended after launch |
+
+The other skills only point to it at the matching step: `architecture-from-idea` after choosing a path, `agent-constraint-docs` when writing the command table and DoD, `vibe-coding-loop` at the end of each task, and `architecture-guardrails` when adding secret and dangerous-path checks.
 
 ### How they fit together (pluggable)
 
@@ -336,6 +399,7 @@ flowchart LR
   C -.-> D
   C -. a bug shows up .-> E["debug-with-logs<br/>Locate it with logs"]
   E -. commit the fix .-> C
+  A -. after choosing a path .-> F["project-essentials<br/>Check off the essentials"]
 ```
 
 - Architecture is not decided, or you want the full flow from an idea: start with `architecture-from-idea`.
@@ -343,6 +407,7 @@ flowchart LR
 - Documents are already in place and the next step is code: use `vibe-coding-loop` directly. Use it once per coding task. Do not build the whole product in a single chat.
 - Rules are already written in ARCH / RULES and the next step is enforcement: use `architecture-guardrails` directly. You can also open it later, when the same mistake happens twice in the coding loop and prose still does not hold.
 - Something is broken and the cause is not known: use `debug-with-logs`. It works at any stage; you do not need the earlier steps first.
+- Starting or taking over a project, or preparing a release: use `project-essentials` to check off the essentials.
 
 You do not have to use all of them. If architecture already exists, do not restart from a blank idea. If you are building a throwaway prototype, follow the prototype path in `architecture-from-idea` and skip the full document set and a heavy gate suite.
 
@@ -366,6 +431,7 @@ cp -R agent-skills/skills/architecture-from-idea \
       agent-skills/skills/vibe-coding-loop \
       agent-skills/skills/architecture-guardrails \
       agent-skills/skills/debug-with-logs \
+      agent-skills/skills/project-essentials \
       <your-skills-directory>/
 ```
 
@@ -432,7 +498,13 @@ After installation, start a chat with wording close to the skill descriptions. T
 
 > Saving fails with error ID r-7f3a9c. Follow debug-with-logs: do not change code yet. Help me find the logs, read which layer broke, and tell me your root-cause hypothesis with the log lines that support it.
 
-You can also speak in Chinese trigger phrases already listed in each skill’s `description`, such as「还没定架构」,「下一步写文档」,「开始编码」,「下一步做门禁」, or「日志怎么设计」. English phrases such as "how should we design logging", "observability", "fix this bug", or "where are the logs" also match.
+**Check the essentials at the start or before release:**
+
+> This is a new project. It will store user data and other people will use it. Follow project-essentials: list the essentials I must do now, and do the minimum version of each first.
+
+> We are about to release. Follow the project-essentials before-release check and give PASS / FAIL / unverified with evidence for each item.
+
+You can also speak in Chinese trigger phrases already listed in each skill’s `description`, such as「还没定架构」,「下一步写文档」,「开始编码」,「下一步做门禁」, or「日志怎么设计」. English phrases such as "how should we design logging", "observability", "fix this bug", "where are the logs", "before release checklist", "how do I roll back", or "where do secrets go" also match.
 
 ### How to use each skill
 
@@ -521,6 +593,18 @@ Failure output should be a repair instruction for the agent, and should point at
 **`LOGS.md` covers:** 14 minimum fields; good versus bad log lines; three hard rules for error logs (include the stack, keep the cause when wrapping, log one error once); a request_id walkthrough from the UI to the database; where logs live on each platform; how to search with `rg` / `jq`.
 
 **Done when:** the root cause is backed by log lines or a repro; the change targets only the root cause; a regression test fails before the fix and passes after; missing logs were added and recorded in the ARCH event table.
+
+#### 6. project-essentials: software basics
+
+**Use when:** starting or taking over a project, or before sharing or releasing it. Also for questions like "where do secrets go", "the AI broke it, how do I roll back", "do I need backups", or "how should I number versions".
+
+**Ask two things first:** does it store user data, and will other people use it? That decides whether data safety and security basics are required.
+
+**How:** the main table lists 10 essentials by tier (prototype / tracer bullet / long-lived) and by moment (project start / every task / before release). Each has a short file whose first section is the minimum version; a prototype only does the minimum. Record the results in the project: commands in the `AGENTS.md` command table, prohibitions in RULES, and the before-release check in the DoD.
+
+**Done when:** every essential picked for the tier has its minimum version, or is marked "not done" with a reason; new commands were actually run; every before-release item is PASS / FAIL / unverified.
+
+No vendor recommendations. Runtime logging and bug locating live in `architecture-from-idea` and `debug-with-logs`, not here.
 
 ### Limits to keep in mind
 

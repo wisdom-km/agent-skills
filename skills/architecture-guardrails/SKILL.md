@@ -49,7 +49,7 @@ description: >-
 - **依赖方向 / 分层**：模块边界 linter 或结构测试。例如 JS/TS 的 dependency-cruiser、Python 的 import-linter、Java 的 ArchUnit。规则写成「谁不能 import 谁」，与 ARCH 的依赖允许表一一对应。见 [recipes/dependency-boundaries.md](recipes/dependency-boundaries.md)。
 - **文件或函数大小**：仓库内脚本，按扩展名设建议上限和硬上限。见 [recipes/file-size.md](recipes/file-size.md)。
 - **运行日志**：core 禁用裸 print / console.log；core 禁止 import 具体日志库；禁止空 catch；扫描日志调用里的密钥字段；禁止字符串拼接写日志。哪些能机器查、哪些只能 review，见 [recipes/logging.md](recipes/logging.md)。[Harness Engineering](https://openai.com/index/harness-engineering/) 写明他们用自定义 lint 静态强制结构化日志。
-- **密钥与危险路径**：gitignore、密钥扫描、agent 的 deny / PreToolUse（例如拒绝读 `.env`、拒绝改迁移目录）。
+- **密钥与危险路径**：gitignore、密钥扫描、agent 的 deny / PreToolUse（例如拒绝读 `.env`、拒绝改迁移目录）。新手版做法和「密钥已泄露怎么办」见 `project-essentials` 的 `essentials/config-and-secrets.md`、`essentials/data-safety.md`。
 - **生成文件**：对生成目录做只读检查或格式化后的 diff 门禁。
 - **格式**：PostToolUse 或 CI 里自动格式化，不要靠文档强调空格。
 - **测试契约**：core 测试套件禁止引用 UI 或网络库；每个端口的内存实现与真实实现跑同一组契约测试。
