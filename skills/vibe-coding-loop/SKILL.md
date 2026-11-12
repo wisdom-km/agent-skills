@@ -77,7 +77,7 @@ description: >-
 
 给 AI 一条能返回通过 / 失败的检查。要求证据：跑了什么命令、输出是什么。不接受「全部通过」一句话。编造测试或检查结果是红线 R-3，任何情况下都不行。
 
-命令表里有全量检查命令时就跑它，退出码就是 G1 的证据。一条命令跑全部检查的 `scripts/check` 模板会在后续版本加入 `architecture-guardrails`；在那之前，逐条跑命令表里的测试和检查。
+命令表里有全量检查命令（通常是 `scripts/check`）时就跑它，退出码就是 G1 的证据。项目还没有时，从 `architecture-guardrails` 的 `templates/project/` 装上（见它的 `recipes/mandatory-gates.md`）；装好之前，逐条跑命令表里的测试和检查。
 
 能像真实用户一样做端到端检查时就做（例如浏览器），不要只跑单测就标完成（Anthropic 长任务 harness）。
 

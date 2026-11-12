@@ -40,7 +40,7 @@ description: >-
 | E3 | M-01 | 版本控制与回滚 | MUST | MUST | MUST | 开工；每个任务 | [version-control.md](essentials/version-control.md) |
 | E4 | M-03 | 密钥与配置（红线 R-1） | MUST | MUST | MUST | 开工；发布前 | [config-and-secrets.md](essentials/config-and-secrets.md) |
 | E5 | M-02 | 一条命令跑、测、构建，README 能照着跑 | MUST | MUST | MUST | 开工；发布前 | [run-and-readme.md](essentials/run-and-readme.md) |
-| E6 | M-06 | 冒烟测试 + 每个 bug 一条回归测试 | SHOULD | MUST | MUST | 开工；每修一个 bug | [tests.md](essentials/tests.md) |
+| E6 | M-06 | 冒烟测试 + 每个 bug 一条回归测试 | SHOULD（已有测试失败时挡） | MUST | MUST | 开工；每修一个 bug | [tests.md](essentials/tests.md) |
 | E7 | M-05 | 错误处理与用户看到的错误信息 | MUST | MUST | MUST | 开工；每个任务 | [errors.md](essentials/errors.md) |
 | E8 | M-11 | 数据安全：备份、恢复、迁移、AI 不碰生产数据（红线 R-2） | [D] MUST | [D] MUST | [D] MUST | 开工；改数据结构时；发布前 | [data-safety.md](essentials/data-safety.md) |
 | E9 | M-09 | 依赖锁定 | MUST | MUST | MUST（+ 审计） | 开工；加依赖时 | [dependencies.md](essentials/dependencies.md) |

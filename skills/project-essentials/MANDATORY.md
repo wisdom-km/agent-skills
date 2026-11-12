@@ -6,7 +6,7 @@
 
 正式定义：在固定关口（开工、任务完成、合入、发布）逐项核对的必须项清单。每项按项目档位标 MUST / SHOULD / —。agent 到关口必须输出门禁表；任一 MUST 不满足，就不能进入下一步，也不能说「完成」。
 
-**诚实的限度：** 本文件和项目里的 `AGENTS.md` 都是给 AI 的文字指令，AI 可能不照做。Claude Code 文档原话：必须每次都发生的事，要做成 hook、deny 规则或托管设置；CLAUDE.md 是 guideline，Claude 可以判断它不适用（[best practices](https://code.claude.com/docs/en/best-practices)）。**真正拦得住的只有 CI、hook 和分支保护。** 所以强制分两层：文档层（本文件：让 agent 自己停下并报告）和机器层（命令失败就合不进去）。机器层的现成模板（`scripts/check`、pre-commit、CI、agent hook）会在后续版本加入 `architecture-guardrails`；在那之前，本文件不等于「已经被机器强制」。
+**诚实的限度：** 本文件和项目里的 `AGENTS.md` 都是给 AI 的文字指令，AI 可能不照做。Claude Code 文档原话：必须每次都发生的事，要做成 hook、deny 规则或托管设置；CLAUDE.md 是 guideline，Claude 可以判断它不适用（[best practices](https://code.claude.com/docs/en/best-practices)）。**真正拦得住的只有 CI、hook 和分支保护。** 所以强制分两层：文档层（本文件：让 agent 自己停下并报告）和机器层（命令失败就合不进去）。机器层的现成模板（`scripts/check`、pre-commit、CI、agent hook）在 `architecture-guardrails` 的 `templates/project/`，装法见它的 `recipes/mandatory-gates.md`。项目没装这些模板、或没接进 CI 和分支保护之前，本文件不等于「已经被机器强制」。
 
 ## 1. 符号
 
@@ -48,7 +48,7 @@
 | M-03 | 密钥不进代码和仓库；`.env` 被忽略；有 `.env.example` | MUST（红线 R-1） | MUST：+ 提交前或 CI 做密钥扫描 | MUST：+ 远端开启 push protection | G0、G1、G2 |
 | M-04 | 运行日志 | MUST 最小版：出错带上下文打印到一处；不打印密钥；`AGENTS.md` 写日志在哪看 | MUST：第一条端到端路径结构化 + request_id；故意出错演练一次 | MUST：ARCH 完整日志节 + 能机器查的日志规则进门禁 + 错误路径测试 | G0、G1 |
 | M-05 | 错误处理 | MUST：不吞错（没有空 catch）；出错时用户能看到提示 | MUST：+ 提示是人话 + 错误编号；堆栈不给用户 | MUST：+ 全局兜底 + 出错默认拒绝 + 错误路径有测试 | G1 |
-| M-06 | 自动测试 | SHOULD：一条能重复跑的冒烟检查（脚本也行） | MUST：冒烟 + 每个 bug 一条回归测试 | MUST：core 单测 + 契约测试 + 回归 + 少量端到端 | G1、G2 |
+| M-06 | 自动测试 | SHOULD：一条能重复跑的冒烟检查（脚本也行）；已有测试却失败时按 MUST，挡住 | MUST：冒烟 + 每个 bug 一条回归测试 | MUST：core 单测 + 契约测试 + 回归 + 少量端到端 | G1、G2 |
 | M-07 | 审查 | MUST：提交前 AI 用人话讲这次改了什么、为什么、可能影响什么；你能复述才提交 | MUST：新会话或子代理独立审查，对照规格 | MUST：独立 AI 审查；涉及密钥、数据、权限、门禁的改动要人审 | G1（原型）、G2 |
 | M-08 | CI：每个 PR 自动构建和测试 | SHOULD | MUST | MUST：+ 分支保护把 CI 设为必需检查 | G2 |
 | M-09 | 依赖锁定 | MUST：锁文件已提交 | MUST：+ CI 按锁文件安装 | MUST：+ 发布前依赖审计 + 自动安全更新 | G0、G2、G3 |
@@ -146,9 +146,9 @@ Skill 靠描述匹配加载。用户只说「开始编码」时，可能只加�
    - `AGENTS.md` 写「强制项」一节：档位、[D] / [P]、本档 MUST 编号、全量检查命令、豁免文件位置、「任一 MUST 不满足不得说完成」。模板见 `agent-constraint-docs` 的 `templates/AGENTS.md`。Codex 在做任何工作之前读取 AGENTS.md（[OpenAI 文档](https://developers.openai.com/codex/guides/agents-md)）。
    - `CLAUDE.md` 写一行 `@AGENTS.md`（Claude Code 支持 `@path` 导入）。
    - Cursor：`.cursor/rules/` 下放一条类型为 Always Apply 的规则，内容只指向 `AGENTS.md` 的强制项（[Cursor rules](https://cursor.com/docs/context/rules)）。
-3. **机器层**（真正拦得住）：CI 必需检查、分支保护、pre-commit、agent hook。模板在后续版本提供，见第 9 节。
+3. **机器层**（真正拦得住）：CI 必需检查、分支保护、pre-commit、agent hook。模板在 `architecture-guardrails` 的 `templates/project/`，见第 9 节。
 
-## 9. 哪些能交给机器（后续版本给模板）
+## 9. 哪些能交给机器（模板已提供）
 
 | 编号 | 机器怎么查 |
 | --- | --- |
@@ -157,9 +157,13 @@ Skill 靠描述匹配加载。用户只说「开始编码」时，可能只加�
 | M-04 | 日志规则 lint，见 `architecture-guardrails` 的 `recipes/logging.md`（已有） |
 | M-06、M-08 | CI 跑测试；分支保护把 CI 设为必需检查 |
 | M-09 | CI 按锁文件安装 |
+| M-02 | README 里有启动 / 测试命令；原型和曳光弹的 README 第一行写明档位 |
+| M-05 | 扫空 catch、`except: pass`、Go 空错误分支 |
 | 其他 | 人查，或在门禁表里由独立审查确认 |
 
-agent hook 的现状：Claude Code 的 Stop hook 用退出码 2 可以阻止 agent 结束，stderr 作为原因回给 agent（[best practices](https://code.claude.com/docs/en/best-practices)，已核实）。Cursor 有 `stop` hook 事件，但能不能阻止 agent 结束**还没核实**。Codex 有没有等价 hook **还没核实**；Codex 侧只靠 AGENTS.md 和 CI。
+模板：`architecture-guardrails` 的 `templates/project/`。`scripts/check` 按 `scripts/check.conf` 里的档位算出每项是 MUST 还是 SHOULD，任一 MUST 失败就退出 1；能查的项、各档要求和故意违规验证见它的 `recipes/mandatory-gates.md`。退出码就是 G1 / G2 门禁表里这些项的证据；机器查不了的项，脚本输出 MANUAL 行提醒，照常在门禁表里附证据。
+
+agent hook 的现状（都已核实官方文档）：Claude Code 的 Stop hook 用退出码 2 阻止 agent 结束，stderr 作为原因交回 agent；连续继续 8 次（中间没有调用工具）后不再阻止（[hooks](https://code.claude.com/docs/en/hooks)）。Cursor 的 `stop` hook 不能阻止结束，但可以返回 `followup_message`，作为下一条消息自动提交，默认最多 5 次（[Cursor hooks](https://cursor.com/docs/hooks)）。Codex 的 Stop hook 用退出码 2 或 `decision: "block"` 让 Codex 继续，项目里的 hook 要先在 `/hooks` 里信任（[Codex hooks](https://developers.openai.com/codex/hooks)）。这些 hook 都可能被关掉或绕过，所以硬门槛仍是 CI 必需检查加分支保护。
 
 ## 10. 来源
 
