@@ -31,7 +31,7 @@ docs/
   incidents/TEMPLATE.md
 packages/ 或 src/
   contracts/              跨边界的类型、协议（契约先行）
-  kernel/                 极小共享原语（Result、ID…）
+  kernel/                 极小共享原语（Result、ID、Logger 接口、请求 ID…）
   features/<slice>/       每个切片同一模板：
     README.md             职责、公开 API、所有者、热点文件
     src/index.*           用例 seam（唯一入口）
@@ -43,12 +43,12 @@ packages/ 或 src/
     src/ui/
     src/testing/          对外的 fake 与契约测试
     test/core/ test/adapters/ test/ui/
-apps/<app>/…/composition-root.*   唯一装配根
+apps/<app>/…/composition-root.*   唯一装配根（也在这里配置具体日志库并注入）
 tools/                    依赖方向、文件大小、文档链接、门禁改法目录
 .github/                  PR 模板、任务模板、CI
 ```
 
-测试：core 只经 seam，不渲染 UI、不联网；每个端口一份共享契约测试，内存实现和真实实现都跑；少量 e2e；重要不变量可加属性测试（《Pragmatic Programmer》Tip 71）。
+测试：core 只经 seam，不渲染 UI、不联网；core 测试用内存 logger 假实现，可以断言关键错误会产生一条带请求 ID 的日志；每个端口一份共享契约测试，内存实现和真实实现都跑；少量 e2e；重要不变量可加属性测试（《Pragmatic Programmer》Tip 71）。
 
 依赖偏好「无聊」、稳定、能在仓库里完全理解的技术（[Harness Engineering](https://openai.com/index/harness-engineering/)）；先定许可证白名单。
 
@@ -62,6 +62,7 @@ tools/                    依赖方向、文件大小、文档链接、门禁改
 6. 门禁失败的输出带「怎么改」（写成给 agent 的修复指令）。
 7. 豁免只能走 ADR，并带到期时间。
 8. 文档与代码同一 PR 同步；要有机制查文档过期。
+9. 运行日志按 ARCH 的日志节设计并执行：结构化；请求 ID 贯穿各层；每个边界有日志；错误带上下文、不吞掉；不记密钥和个人数据；写明日志去哪、留多久。能机器检查的进门禁（`architecture-guardrails` 的 `recipes/logging.md`）。OpenAI harness 用自定义 lint 静态强制结构化日志，并让 agent 能直接查日志、指标和链路（[Harness Engineering](https://openai.com/index/harness-engineering/)）。
 
 文档写完后，打开 `agent-constraint-docs` 和 `architecture-guardrails`。
 

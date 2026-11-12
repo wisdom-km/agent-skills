@@ -30,8 +30,17 @@ This repository will keep growing. It is not limited to the four skills below.
 
 - `architecture-from-idea`：`DEMO.md`（原型细则）、`LONG.md`（长期项目细则）、`PRINCIPLES.md`（需要向人解释术语时再读）
 - `agent-constraint-docs`：`templates/` 下的空白模板
-- `architecture-guardrails`：`recipes/` 下的检查配方
+- `architecture-guardrails`：`recipes/` 下的检查配方（含 `recipes/logging.md` 日志检查）
 - `vibe-coding-loop`：只有 `SKILL.md`
+
+### 运行日志：从定架构就开始提醒
+
+没有日志的项目，测试时出了错只能猜。所以这 4 个 Skill 会在对应的那一步提醒你把程序运行日志设计进去：
+
+- `architecture-from-idea`：问清「出了问题谁看日志、在哪看」；把日志定成一条架构决定（日志在端口后面、结构化、级别、请求 ID 贯穿各层、在边界记、绝不记密钥和个人数据、日志去哪），写一条 ADR。原型只要一条底线：出错带上下文打印到一个地方。
+- `agent-constraint-docs`：ARCHITECTURE 模板有可直接填的日志节（字段表、级别表、事件表）；RULES 模板有日志规则 L-01 到 L-05；`AGENTS.md` 模板有「看日志」命令。
+- `vibe-coding-loop`：新代码跨边界时加日志；修 bug 先读日志；日志定位不到时，先补日志再修。
+- `architecture-guardrails`：`recipes/logging.md` 列出哪些日志规则能机器检查（core 禁裸 print、禁空 catch、日志不记密钥等），哪些只能 review。
 
 ### 它们怎么配合（可插拔）
 
@@ -133,7 +142,7 @@ Claude 会按 `description` 自动选用，也可以输入 `/architecture-from-i
 
 > 把这条不能有例外的规则变成机器检查。请按 architecture-guardrails，做成 lint 或 CI，不要只写在文档里。
 
-也可以不提英文名，直接说「还没定架构」「从想法开始」「怎么分层」「下一步写文档」「开始编码」「下一步做门禁」。这些短语已经写在各 Skill 的触发说明里。
+也可以不提英文名，直接说「还没定架构」「从想法开始」「怎么分层」「下一步写文档」「开始编码」「下一步做门禁」「日志怎么设计」「出问题了怎么查」。这些短语已经写在各 Skill 的触发说明里。
 
 ### 各 Skill 的具体用法
 
@@ -277,8 +286,17 @@ Install the helper files too, not only `SKILL.md`:
 
 - `architecture-from-idea`: `DEMO.md` (prototype path), `LONG.md` (long-lived path), `PRINCIPLES.md` (read when you need to explain terms to a person)
 - `agent-constraint-docs`: blank templates in `templates/`
-- `architecture-guardrails`: recipes in `recipes/`
+- `architecture-guardrails`: recipes in `recipes/` (including `recipes/logging.md` for logging checks)
 - `vibe-coding-loop`: `SKILL.md` only
+
+### Runtime logging: prompted from the architecture stage
+
+Without logs, a failure found in testing leaves you guessing. So each of the four skills reminds you to design runtime logging at the step where it matters:
+
+- `architecture-from-idea`: asks who reads logs and where when something breaks; makes logging an architecture decision (logger behind a port, structured logs, defined levels, a request ID across all layers, logs at boundaries, never log secrets or personal data, where logs go) and records it as an ADR. A prototype only needs a floor: print errors with context to one place.
+- `agent-constraint-docs`: the ARCHITECTURE template has a fill-in logging section (field, level, and event tables); the RULES template has logging rules L-01 to L-05; the `AGENTS.md` template has a "read logs" command.
+- `vibe-coding-loop`: new code that crosses a boundary adds logs; bug fixes start by reading logs; if logs could not locate the bug, add the missing log first, then fix.
+- `architecture-guardrails`: `recipes/logging.md` lists which logging rules can be machine-checked (no bare print in core, no empty catch, no secrets in logs, and so on) and which stay review-only.
 
 ### How they fit together (pluggable)
 
@@ -380,7 +398,7 @@ After installation, start a chat with wording close to the skill descriptions. T
 
 > Turn this no-exceptions rule into a machine check. Follow architecture-guardrails and add a linter or CI gate, not just prose.
 
-You can also speak in Chinese trigger phrases already listed in each skill’s `description`, such as「还没定架构」,「下一步写文档」,「开始编码」, or「下一步做门禁」.
+You can also speak in Chinese trigger phrases already listed in each skill’s `description`, such as「还没定架构」,「下一步写文档」,「开始编码」,「下一步做门禁」, or「日志怎么设计」. English phrases such as "how should we design logging" or "observability" also match.
 
 ### How to use each skill
 

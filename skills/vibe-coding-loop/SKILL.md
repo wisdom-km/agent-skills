@@ -7,7 +7,9 @@ description: >-
   the architecture, verify with real commands, review against the spec, and feed
   repeated mistakes back into docs or checks. Also when documents are already in
   place and the next step is to code, or the user says 文档已经有了, 下一步写代码, 下一步是实现,
-  开始编码, 开始实现, Vibe Coding, 做一个编码任务, 按任务让 AI 写代码, or 任务循环.
+  开始编码, 开始实现, Vibe Coding, 做一个编码任务, 按任务让 AI 写代码, or 任务循环. Also when
+  fixing a bug and the first step is reading runtime logs, or the user says 修 bug,
+  出问题了怎么查, 看日志, 日志定位不到.
 ---
 # Vibe Coding 任务循环
 
@@ -27,7 +29,7 @@ description: >-
 
 - **Goal**：做成什么
 - **Context**：相关文件、组件、要模仿的现有模块路径、「按模块 X 的方式实现」
-- **Constraints**：不要做什么、不要扩大范围、架构禁令
+- **Constraints**：不要做什么、不要扩大范围、架构禁令。任务碰到新边界（入口、适配器、外部调用）时，写明要加哪些日志（按 ARCH 日志节）
 - **Done when**：可观察的验收，以及要跑的命令和预期退出码
 
 有 UI 或交互时，说明「修好长什么样」。两种合理方案都说得通时，先由人选定。出处：[How OpenAI uses Codex](https://openai.com/business/guides-and-resources/how-openai-uses-codex/)；[Claude Code 最佳实践](https://code.claude.com/docs/en/best-practices)。
@@ -58,6 +60,7 @@ description: >-
 - 业务规则放 core；UI 只经 seam 调用；新依赖边必须落在允许矩阵里。
 - 强制不变量，不微管实现（harness）：在边界校验数据形状，但不为了风格琐事加规则。
 - 人已经打好地基时，不要让 agent 在 UI 层塞进本该属于 core 的逻辑（Sora 文：模型缺深层架构判断时会这样做）。
+- 新代码跨过边界时加日志：按 ARCH 日志节的字段和级别，带上请求 ID。错误带上下文记一次，不吞掉。core 只用注入的 logger。不记密钥和个人数据。加了新事件就更新 ARCH 事件表。
 
 ## 5. 用真实命令验证
 
@@ -66,6 +69,10 @@ description: >-
 能像真实用户一样做端到端检查时就做（例如浏览器），不要只跑单测就标完成（Anthropic 长任务 harness）。
 
 同一提交的全量检查只跑一次；失败只重跑失败项，用来排除偶发失败。
+
+证据可以引用日志行：贴出带请求 ID 的那几行（去掉密钥和个人数据）。新加了日志时，故意触发一次错误，确认能按请求 ID 找到它。日志本身也是代码，也会写错（addyosmani/agent-skills `observability-and-instrumentation`，MIT，借思路）。
+
+**修 bug 时先读日志，再读代码。** 按请求 ID 过滤，找第一条 ERROR，看它前面的外部调用。可以把日志直接交给 agent 读，例如 `cat error.log | claude -p "what's going on here"`（[Claude Code 最佳实践](https://code.claude.com/docs/en/best-practices)）。日志定位不到问题时，先补上缺的那条日志，再修 bug。补的日志是修复的一部分，同一个 PR 提交，并写回 ARCH 事件表。OpenAI 的团队让 agent 直接查询日志、指标和链路，才能自己验证「启动在 800ms 内完成」这类要求（[Harness Engineering](https://openai.com/index/harness-engineering/)）。
 
 做完判据：PR 或 `docs/evidence/` 里有命令、退出码，必要时有日志。
 
@@ -83,7 +90,7 @@ OpenAI 建议用审查工作流，并且可以在离代码近的 `AGENTS.md` 里
 
 同一错误犯两次 → 复盘 → 更新 `AGENTS.md` 或对应规格。文档仍然管不住 → 打开 `architecture-guardrails`，升级为 lint、测试或 hook。
 
-审查意见、重构、用户发现的缺陷，同样回写成文档或工具（harness：「文档不够时，把规则升级成代码」）。
+日志没能定位的缺陷，复盘里写「缺了哪条日志」，补进 ARCH 事件表。审查意见、重构、用户发现的缺陷，同样回写成文档或工具（harness：「文档不够时，把规则升级成代码」）。
 
 可定期做小清理：扫偏离已写原则的代码，开小重构，而不是攒成大爆炸。
 
@@ -104,3 +111,4 @@ OpenAI 建议用审查工作流，并且可以在离代码近的 `AGENTS.md` 里
 - [ ] 有命令与退出码，没有口头「全过」
 - [ ] 没有一次做多个切片
 - [ ] 重复错误已写回文档或检查
+- [ ] 新边界有日志、带请求 ID；修 bug 时先读了日志，缺的日志已补上

@@ -7,7 +7,9 @@ description: >-
   test, CI gate, or agent hook instead of prose. Also when rules are already
   written and the next step is machine enforcement, or the user says 下一步做门禁,
   下一步做机器检查, 把规则变成 CI, 把规则变成 lint, 架构护栏, 强制依赖方向, 不能有例外的规则, or to turn a rule into
-  a hook.
+  a hook. Also when logging rules (no bare print in core, no empty catch, no
+  secrets in logs, structured logging) should become checks, or the user says
+  日志规则做成检查, 禁止空 catch, 日志不记密钥.
 ---
 # 架构护栏
 
@@ -46,6 +48,7 @@ description: >-
 
 - **依赖方向 / 分层**：模块边界 linter 或结构测试。例如 JS/TS 的 dependency-cruiser、Python 的 import-linter、Java 的 ArchUnit。规则写成「谁不能 import 谁」，与 ARCH 的依赖允许表一一对应。见 [recipes/dependency-boundaries.md](recipes/dependency-boundaries.md)。
 - **文件或函数大小**：仓库内脚本，按扩展名设建议上限和硬上限。见 [recipes/file-size.md](recipes/file-size.md)。
+- **运行日志**：core 禁用裸 print / console.log；core 禁止 import 具体日志库；禁止空 catch；扫描日志调用里的密钥字段；禁止字符串拼接写日志。哪些能机器查、哪些只能 review，见 [recipes/logging.md](recipes/logging.md)。[Harness Engineering](https://openai.com/index/harness-engineering/) 写明他们用自定义 lint 静态强制结构化日志。
 - **密钥与危险路径**：gitignore、密钥扫描、agent 的 deny / PreToolUse（例如拒绝读 `.env`、拒绝改迁移目录）。
 - **生成文件**：对生成目录做只读检查或格式化后的 diff 门禁。
 - **格式**：PostToolUse 或 CI 里自动格式化，不要靠文档强调空格。
@@ -73,3 +76,4 @@ description: >-
 - [ ] 报错里有改法，并指向规格
 - [ ] 至少做过一次故意违规被拒
 - [ ] 豁免带到期日
+- [ ] 日志规则里能机器查的已接门禁，其余标了 review
