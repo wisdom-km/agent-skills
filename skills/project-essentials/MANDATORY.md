@@ -97,7 +97,7 @@
 
 | 关口 | 什么时候 | 谁触发 | 不过会怎样 |
 | --- | --- | --- | --- |
-| G0 开工门 | 选定档位之后、写第一行业务代码之前；接手已有项目时 | `architecture-from-idea` 第 2 步末；`project-essentials`；`vibe-coding-loop` 发现项目没有强制项清单时 | 不写业务代码，先补齐 G0 的 MUST |
+| G0 开工门 | 选定档位之后、写第一行业务代码之前；接手已有项目时 | `architecture-from-idea` 第 2 步末；`always-on-agents` 第 3 步；`project-essentials`；`vibe-coding-loop` 发现项目没有强制项清单时 | 不写业务代码，先补齐 G0 的 MUST |
 | G1 任务完成门 | 每个编码任务说「完成」之前；每次修完 bug | `vibe-coding-loop` 第 7 步；`debug-with-logs` 交付前 | 不说「完成」，报告「未满足：M-xx」 |
 | G2 合入门 | 合入 main 之前 | `vibe-coding-loop` 第 7 步；CI；分支保护 | 不合入；CI 红就不合 |
 | G3 发布门 | 第一次给别人用之前；每次发布之前 | `project-essentials`「发布前」 | 不发布 |

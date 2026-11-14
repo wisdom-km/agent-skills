@@ -26,6 +26,7 @@ description: >-
 - 架构定稿后写给 AI 的文档：`agent-constraint-docs`
 - 每个编码任务的循环：`vibe-coding-loop`
 - 把「不能有例外」的规则变成机器检查：`architecture-guardrails`
+- 要做被事件或定时器叫醒、用户不在时也干活的 agent：`always-on-agents`
 
 需要向人解释术语时，再读同目录 [PRINCIPLES.md](PRINCIPLES.md)。demo 细则见 [DEMO.md](DEMO.md)，长期细则见 [LONG.md](LONG.md)。
 

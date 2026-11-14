@@ -24,6 +24,7 @@ Think of it as a co-pilot's checklist: the agent still flies the plane, but at f
 | [`architecture-guardrails`](skills/architecture-guardrails/) | A rule must hold with no exceptions | A linter, structural test, CI gate, or agent hook with fix-it messages; copy-in gate templates for your project |
 | [`debug-with-logs`](skills/debug-with-logs/) | Something is broken and you don't know why yet | Repro steps, a root cause read from the logs by `request_id`, a minimal fix with a regression test, and a bug report you can hand to the AI |
 | [`project-essentials`](skills/project-essentials/) | You start, take over, share, or release a project | The mandatory checklist shared by all skills ([`MANDATORY.md`](skills/project-essentials/MANDATORY.md)) and the software basics by tier |
+| [`always-on-agents`](skills/always-on-agents/) | You are building an agent that wakes on events or timers and works while the user is away | A "do you really need it" check, then a design for five parts (event inbox, timers, memory, permissions, outbox) with SQL and Markdown templates and a verifiable checklist |
 
 Helper files travel with each skill, so install the **whole folder**, not just `SKILL.md`:
 
@@ -33,6 +34,7 @@ Helper files travel with each skill, so install the **whole folder**, not just `
 - `architecture-guardrails`: check recipes in `recipes/` (including [`logging.md`](skills/architecture-guardrails/recipes/logging.md) and [`mandatory-gates.md`](skills/architecture-guardrails/recipes/mandatory-gates.md)); copy-in gate files in [`templates/project/`](skills/architecture-guardrails/templates/project/)
 - `debug-with-logs`: `WORKFLOW.md` (12-step flow), `LOGS.md` (good vs bad logs, minimum fields, where logs live on each platform), `BUG_REPORT.md` (bug report template)
 - `project-essentials`: `MANDATORY.md`; one short file per essential in `essentials/`; `.env.example`, `CHANGELOG.md`, `GATE_REPORT.md` (gate table), and `WAIVERS.md` (waiver log) in `templates/`
+- `always-on-agents`: `PRINCIPLES.md` (analogy first, then formal definition), `CHECKLIST.md` (verifiable checks per part); `inbox.sql`, `timers.sql`, `outbox.sql`, `MEMORY.md`, `PERMISSIONS.md`, `SEND_POLICY.md` in `templates/`
 
 ### How they fit together
 
@@ -45,9 +47,11 @@ flowchart LR
   C -. bug .-> E["debug-with-logs<br/>locate it with logs"]
   E -. commit the fix .-> C
   A -. after choosing a tier .-> F["project-essentials<br/>mandatory items by tier"]
+  A -. agent that wakes itself .-> G["always-on-agents<br/>inbox, timers, memory,<br/>permissions, outbox"]
+  G -.-> B
 ```
 
-You don't need all of them. Start wherever you are: no architecture yet → `architecture-from-idea`; architecture agreed → `agent-constraint-docs`; docs in place → `vibe-coding-loop` (once per task, not one chat for a whole app); a no-exceptions rule → `architecture-guardrails`; a bug at any stage → `debug-with-logs`; starting or releasing → `project-essentials`.
+You don't need all of them. Start wherever you are: no architecture yet → `architecture-from-idea`; architecture agreed → `agent-constraint-docs`; docs in place → `vibe-coding-loop` (once per task, not one chat for a whole app); a no-exceptions rule → `architecture-guardrails`; a bug at any stage → `debug-with-logs`; starting or releasing → `project-essentials`; building an agent that wakes on events or timers → `always-on-agents`.
 
 ## Tiers and mandatory gates
 
@@ -164,7 +168,9 @@ Phrase your request close to a skill's description, or name the skill. Agents pi
 
 > Is this task done? Follow vibe-coding-loop and output the G1 gate table. If any MUST fails, don't call it done; tell me how to fix it.
 
-Chinese trigger phrases in the descriptions also work, for example「还没定架构」「下一步写文档」「开始编码」「出错了」「上线前检查」.
+> I want an agent that checks my project every morning and pings me only when something changed. Follow always-on-agents: first ask whether it really needs to be always-on, then design the inbox, timers, memory, permissions, and outbox. No feature code yet.
+
+Chinese trigger phrases in the descriptions also work, for example「还没定架构」「下一步写文档」「开始编码」「出错了」「上线前检查」「常驻 agent」「每天早上发我」.
 
 ## Good to know
 

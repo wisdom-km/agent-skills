@@ -24,6 +24,7 @@
 | [`architecture-guardrails`](skills/architecture-guardrails/) | 某条规则不能有例外 | lint、结构测试、CI 门禁或 agent hook，失败时给出改法；可复制进项目的门禁模板 |
 | [`debug-with-logs`](skills/debug-with-logs/) | 出了问题，还不知道原因 | 复现步骤、按 `request_id` 读日志得出的根因、最小修复和回归测试，以及一份可以直接交给 AI 的 bug 报告 |
 | [`project-essentials`](skills/project-essentials/) | 开新项目、接手项目、给别人用或发布 | 所有 Skill 共用的强制项清单（[`MANDATORY.md`](skills/project-essentials/MANDATORY.md)），以及按档位列出的软件必备件 |
+| [`always-on-agents`](skills/always-on-agents/) | 要做一个被事件或定时器叫醒、用户不在时也干活的 agent | 先判断是否真的需要常驻，再设计五个部件（事件收件箱、定时器、记忆、权限、发件箱），附 SQL 和 Markdown 模板及可验证的检查清单 |
 
 每个 Skill 都有配套文件，所以要安装**整个文件夹**，不要只拷 `SKILL.md`：
 
@@ -33,6 +34,7 @@
 - `architecture-guardrails`：`recipes/` 下的检查配方（含 [`logging.md`](skills/architecture-guardrails/recipes/logging.md) 和 [`mandatory-gates.md`](skills/architecture-guardrails/recipes/mandatory-gates.md)）；[`templates/project/`](skills/architecture-guardrails/templates/project/) 下是复制进项目的门禁文件
 - `debug-with-logs`：`WORKFLOW.md`（12 步定位流程）、`LOGS.md`（好坏日志对比、最少字段、各平台日志在哪看）、`BUG_REPORT.md`（bug 报告模板）
 - `project-essentials`：`MANDATORY.md`；`essentials/` 下每个必备件一个短文件；`templates/` 下有 `.env.example`、`CHANGELOG.md`、`GATE_REPORT.md`（门禁表）、`WAIVERS.md`（豁免记录）
+- `always-on-agents`：`PRINCIPLES.md`（先类比、再定义）、`CHECKLIST.md`（每个部件的可验证检查项）；`templates/` 下有 `inbox.sql`、`timers.sql`、`outbox.sql`、`MEMORY.md`、`PERMISSIONS.md`、`SEND_POLICY.md`
 
 ### 它们怎么配合
 
@@ -45,9 +47,11 @@ flowchart LR
   C -. 出了 bug .-> E["debug-with-logs<br/>用日志定位"]
   E -. 修好后提交 .-> C
   A -. 选完档位 .-> F["project-essentials<br/>按档位勾选强制项"]
+  A -. 会自己醒来的 agent .-> G["always-on-agents<br/>收件箱、定时器、记忆、<br/>权限、发件箱"]
+  G -.-> B
 ```
 
-不必全用，从你现在所处的那一步开始：还没定架构，用 `architecture-from-idea`；架构定了，用 `agent-constraint-docs`；文档有了，用 `vibe-coding-loop`（每个任务用一次，不要一个对话做完整个应用）；有不能例外的规则，用 `architecture-guardrails`；任何阶段出了 bug，用 `debug-with-logs`；开工或发布，用 `project-essentials`。
+不必全用，从你现在所处的那一步开始：还没定架构，用 `architecture-from-idea`；架构定了，用 `agent-constraint-docs`；文档有了，用 `vibe-coding-loop`（每个任务用一次，不要一个对话做完整个应用）；有不能例外的规则，用 `architecture-guardrails`；任何阶段出了 bug，用 `debug-with-logs`；开工或发布，用 `project-essentials`；要做被事件或定时器叫醒的 agent，用 `always-on-agents`。
 
 ## 档位和强制门禁
 
@@ -164,7 +168,9 @@ Claude 会按 `description` 自动选用，也可以直接输入 `/architecture-
 
 > 这个任务做完了吗？请按 vibe-coding-loop 输出 G1 门禁表；任一 MUST 是 FAIL 就别说完成，先告诉我怎么补。
 
-也可以不提英文名，直接说「还没定架构」「下一步写文档」「开始编码」「出错了」「上线前检查」，这些短语已经写在触发说明里。
+> 我想做一个 agent，每天早上检查我的项目，有变化才通知我。请按 always-on-agents：先问清楚是不是真的需要常驻，再设计收件箱、定时器、记忆、权限和发件箱，先不要写业务代码。
+
+也可以不提英文名，直接说「还没定架构」「下一步写文档」「开始编码」「出错了」「上线前检查」「常驻 agent」「每天早上发我」，这些短语已经写在触发说明里。
 
 ## 使用须知
 
