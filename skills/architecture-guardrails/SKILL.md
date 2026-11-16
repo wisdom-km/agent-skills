@@ -24,6 +24,8 @@ description: >-
 
 当某条架构规则必须没有例外、应该由 linter、结构测试、CI 门禁或 agent hook 强制，而不是只写在文档里时，使用本 skill。典型对象：依赖方向、UI 不得引用 core 内部、文件大小上限、密钥不入库、生成文件不可手改。
 
+**使用地图。** 开工时用平时读文件的方式看技能库 `skills/` 里每个 `SKILL.md` 的名字，对照本项目根目录的 `SKILL_MAP.md`。新名字标成未核实，不要编造关系和用过的记录。没有脚本，装上或读过 Skill 也不会自动执行。读过不等于用过，用过不等于做完。一段工作结束时更新这份地图，并告诉用户：用过、正在用、下一步、卡住。项目根不清楚就不要写。详见 [`NAVIGATION.md`](../../NAVIGATION.md)。
+
 先有规则正文（通常在 `ARCHITECTURE.md` / `RULES.md`），再做本 skill。文档怎么写见 `agent-constraint-docs`。编码任务循环见 `vibe-coding-loop`。
 
 ## 哪类规则必须进机器
@@ -90,3 +92,4 @@ description: >-
 - [ ] 每个检查都标了对应的 M 编号；还没接进 CI 的，门禁表里不写成「已强制」
 - [ ] 日志规则里能机器查的已接门禁，其余标了 review
 - [ ] 项目里有 `scripts/check`，本档要求的 pre-commit / CI / 分支保护已接上（见 recipes/mandatory-gates.md），故意违规验证的命令和退出码已贴进门禁表
+- [ ] 若这一步实际用了本 skill：本项目 `SKILL_MAP.md` 有状态、证据和下一步理由。只打开文件不算用过

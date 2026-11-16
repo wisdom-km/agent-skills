@@ -53,6 +53,14 @@ flowchart LR
 
 You don't need all of them. Start wherever you are: no architecture yet → `architecture-from-idea`; architecture agreed → `agent-constraint-docs`; docs in place → `vibe-coding-loop` (once per task, not one chat for a whole app); a no-exceptions rule → `architecture-guardrails`; a bug at any stage → `debug-with-logs`; starting or releasing → `project-essentials`; building an agent that wakes on events or timers → `always-on-agents`.
 
+### Skills usage map
+
+The diagram above says how the skills relate. It is not a project's progress, and it is not a system architecture. You do not need Python, Node, or any other runtime to use it, and nothing runs in the background. Reading or installing a skill does not execute it.
+
+The picture and a text fallback are in [`NAVIGATION.md`](NAVIGATION.md). This repository stores that catalog only. Each project keeps its own `SKILL_MAP.md` in that project's root, copied from [`skills/agent-constraint-docs/templates/SKILL_MAP.md`](skills/agent-constraint-docs/templates/SKILL_MAP.md), so two projects can share one skills directory and still have different histories. A skill the agent has not judged yet stays unverified. Reading a skill is not use, and use is not finished work.
+
+At the start of work the agent reads the `skills/` folders with its ordinary file tools and updates that project's map. If the project root is unclear, it does not write. At the end of a work segment it tells you, in a few sentences: what it used, what it is using now, what is next, and what is blocked.
+
 ## Tiers and mandatory gates
 
 Everyday version: a pre-flight checklist. Not "I think it's all fine", but a fixed list ticked at fixed moments; one required item fails, the plane does not take off.
@@ -186,9 +194,11 @@ skills/
     SKILL.md      # required: YAML frontmatter (name, description) + instructions for the agent
     README.md     # short human-readable summary
     ...           # helper files, templates, recipes, scripts
+NAVIGATION.md     # how the skills relate; not a project's usage record
 LICENSE
 README.md
 README.zh-CN.md
+AGENTS.md
 ```
 
 ## Contributing
@@ -200,6 +210,8 @@ Issues and pull requests are welcome — bug reports, unclear steps, broken link
 - Reference helper files with relative paths from `SKILL.md`.
 - Don't state anything as verified unless you checked it; mark the rest as unverified.
 - Never commit secrets or real personal data, including in examples.
+- A new skill is a new folder under `skills/`. If you know how it relates to the others, add a row to [`NAVIGATION.md`](NAVIGATION.md). If you do not know, leave the relationship unknown.
+- Do not record a project's usage status in this repository. That stays in the project's own `SKILL_MAP.md`.
 
 ## License
 

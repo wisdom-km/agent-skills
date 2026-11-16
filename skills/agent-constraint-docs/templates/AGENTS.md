@@ -13,6 +13,10 @@
 - [RULES.md](RULES.md) 禁止清单
 - [RULES.md](RULES.md) Definition of Done
 
+## Skills 使用地图
+
+开工时用平时读文件的方式看技能库 `skills/` 里有哪些 Skill，对照本项目根目录的 [SKILL_MAP.md](SKILL_MAP.md)。没有脚本，装上或读过也不会自动执行。新名字标成未核实。读过不等于用过，用过不等于做完。一段工作结束时更新这份地图，并告诉用户：用过、正在用、下一步、卡住。项目根不清楚就不要写，也不要写进技能库。改之前先再读一遍当前文件。细节见技能库 `NAVIGATION.md`。
+
 ## 强制项（MUST）
 
 编号和细则来自 `project-essentials` 的 MANDATORY.md，这里只写本项目用到的结论。
