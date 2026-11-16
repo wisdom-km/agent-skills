@@ -1,0 +1,170 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "id": "chain",
+      "title": "Typical chain (not every project)",
+      "title_zh": "常见顺序（不是每个项目都要走完）",
+      "skills": [
+        "architecture-from-idea",
+        "agent-constraint-docs",
+        "vibe-coding-loop"
+      ]
+    },
+    {
+      "id": "cross",
+      "title": "Cross-cutting, not a station",
+      "title_zh": "贯穿各项，不是顺序里的一站",
+      "skills": ["project-essentials"]
+    },
+    {
+      "id": "conditional",
+      "title": "Conditional and repeatable",
+      "title_zh": "有条件才用，而且可以重复用",
+      "skills": ["architecture-guardrails", "debug-with-logs"]
+    },
+    {
+      "id": "only-when",
+      "title": "Only when building this kind of agent",
+      "title_zh": "只有要做这类 agent 时才用",
+      "skills": ["always-on-agents"]
+    }
+  ],
+  "skills": {
+    "architecture-from-idea": {
+      "role": "chain",
+      "source": "skills/architecture-from-idea/SKILL.md"
+    },
+    "agent-constraint-docs": {
+      "role": "chain",
+      "source": "skills/agent-constraint-docs/SKILL.md"
+    },
+    "vibe-coding-loop": {
+      "role": "chain-repeatable",
+      "source": "skills/vibe-coding-loop/SKILL.md"
+    },
+    "project-essentials": {
+      "role": "cross-cutting",
+      "source": "skills/project-essentials/SKILL.md"
+    },
+    "architecture-guardrails": {
+      "role": "conditional-repeatable",
+      "source": "skills/architecture-guardrails/SKILL.md"
+    },
+    "debug-with-logs": {
+      "role": "conditional-repeatable",
+      "source": "skills/debug-with-logs/SKILL.md"
+    },
+    "always-on-agents": {
+      "role": "only-when",
+      "source": "skills/always-on-agents/SKILL.md"
+    }
+  },
+  "relations": [
+    {
+      "from": "architecture-from-idea",
+      "to": "agent-constraint-docs",
+      "kind": "typical-next",
+      "when": "架构定稿之后，下一步是写给 AI 的约束文档。",
+      "source": "skills/architecture-from-idea/SKILL.md"
+    },
+    {
+      "from": "agent-constraint-docs",
+      "to": "vibe-coding-loop",
+      "kind": "typical-next",
+      "when": "文档已经有了，每个编码任务用一次。",
+      "source": "skills/agent-constraint-docs/SKILL.md"
+    },
+    {
+      "from": "architecture-from-idea",
+      "to": "vibe-coding-loop",
+      "kind": "typical-next",
+      "when": "约束文档写完之后，每个任务进入编码循环。",
+      "source": "skills/architecture-from-idea/SKILL.md"
+    },
+    {
+      "from": "architecture-from-idea",
+      "to": "architecture-guardrails",
+      "kind": "conditional",
+      "when": "有不能有例外的规则，要变成机器检查时。",
+      "source": "skills/architecture-from-idea/SKILL.md"
+    },
+    {
+      "from": "agent-constraint-docs",
+      "to": "architecture-guardrails",
+      "kind": "conditional",
+      "when": "规则已经写进文档，下一步要机器强制时。",
+      "source": "skills/agent-constraint-docs/SKILL.md"
+    },
+    {
+      "from": "vibe-coding-loop",
+      "to": "architecture-guardrails",
+      "kind": "conditional",
+      "when": "硬规则要机器强制，或同一错误写进文档仍然管不住时。",
+      "source": "skills/vibe-coding-loop/SKILL.md"
+    },
+    {
+      "from": "vibe-coding-loop",
+      "to": "debug-with-logs",
+      "kind": "conditional",
+      "when": "出了 bug 但原因还不知道时，先定位，再回来提交。",
+      "source": "skills/vibe-coding-loop/SKILL.md"
+    },
+    {
+      "from": "debug-with-logs",
+      "to": "vibe-coding-loop",
+      "kind": "typical-next",
+      "when": "修好之后的提交和审查回到编码循环。",
+      "source": "skills/debug-with-logs/SKILL.md"
+    },
+    {
+      "from": "debug-with-logs",
+      "to": "architecture-guardrails",
+      "kind": "conditional",
+      "when": "日志规则要变成机器检查时。",
+      "source": "skills/debug-with-logs/SKILL.md"
+    },
+    {
+      "from": "architecture-from-idea",
+      "to": "always-on-agents",
+      "kind": "only-when",
+      "when": "要做被事件或定时器叫醒、用户不在时也干活的 agent。",
+      "source": "skills/architecture-from-idea/SKILL.md"
+    },
+    {
+      "from": "always-on-agents",
+      "to": "architecture-from-idea",
+      "kind": "only-when",
+      "when": "还没定档位和整体架构时先分流。本技能是那一步里的一个专题，不是必经站。",
+      "source": "skills/always-on-agents/SKILL.md"
+    },
+    {
+      "from": "always-on-agents",
+      "to": "agent-constraint-docs",
+      "kind": "typical-next",
+      "when": "五个部件设计定了，写成给 AI 的文档。",
+      "source": "skills/always-on-agents/SKILL.md"
+    },
+    {
+      "from": "always-on-agents",
+      "to": "vibe-coding-loop",
+      "kind": "typical-next",
+      "when": "实现时一个部件一个编码任务。",
+      "source": "skills/always-on-agents/SKILL.md"
+    },
+    {
+      "from": "always-on-agents",
+      "to": "architecture-guardrails",
+      "kind": "conditional",
+      "when": "同一事件只跑一次、密钥不进 agent 环境这类硬规则要机器强制时。",
+      "source": "skills/always-on-agents/SKILL.md"
+    },
+    {
+      "from": "always-on-agents",
+      "to": "debug-with-logs",
+      "kind": "conditional",
+      "when": "跑起来出了问题，按 run_id 和 event_id 查日志。",
+      "source": "skills/always-on-agents/SKILL.md"
+    }
+  ]
+}

@@ -23,6 +23,8 @@ description: >-
 
 仓库里已经有（或正在写）给 AI 的文档时，每做一个编码任务就用本 skill。把请求收成有边界的任务，该计划的先计划，在既定架构里实现，用真实命令验证，对照规格审查，并把重复错误写回文档或检查。
 
+**使用地图。** 开工时运行技能库的 `navigation/skill-map sync --project <本项目根的绝对路径> --source <skills 目录的绝对路径>`。这条命令不会自动执行，也没有后台进程。它只写本项目的 `SKILL_MAP.md` 和 `.skill-map/usage.json`，不改技能库，也不改别的项目。失败就停下，原来的地图还在；不要猜，不要把使用记录写进技能目录。新 Skill 标成未核实。只读过文件不算用过，没有证据就是未核实。详见仓库 `NAVIGATION.md`。
+
 还没有架构分流或文档体系时，先用 `architecture-from-idea` 和 `agent-constraint-docs`。硬规则要机器强制时用 `architecture-guardrails`。具体改仓库的操作交给 `code-changes`。
 
 不要在一个对话里做整个项目。[OpenAI 最佳实践](https://learn.chatgpt.com/guides/best-practices)：一个聊天对应一个连贯的工作单元。
@@ -137,3 +139,4 @@ OpenAI 建议用审查工作流，并且可以在离代码近的 `AGENTS.md` 里
 - [ ] 新边界有日志、带请求 ID；修 bug 时先读了日志，缺的日志已补上
 - [ ] 输出了 G1 门禁表（要合入时还有 G2）；每个 PASS 都有证据；有 MUST 是 FAIL 时没有说「完成」
 - [ ] 每个 WAIVED 都在 `docs/WAIVERS.md` 里有用户原话
+- [ ] 若这一步实际用了本 skill：本项目 `SKILL_MAP.md` 有状态、证据和下一步理由。只打开文件不算用过

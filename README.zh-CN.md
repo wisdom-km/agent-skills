@@ -53,6 +53,14 @@ flowchart LR
 
 不必全用，从你现在所处的那一步开始：还没定架构，用 `architecture-from-idea`；架构定了，用 `agent-constraint-docs`；文档有了，用 `vibe-coding-loop`（每个任务用一次，不要一个对话做完整个应用）；有不能例外的规则，用 `architecture-guardrails`；任何阶段出了 bug，用 `debug-with-logs`；开工或发布，用 `project-essentials`；要做被事件或定时器叫醒的 agent，用 `always-on-agents`。
 
+### Skills 使用地图
+
+上面的图说的是这些 Skill 怎么关联。它不是某个项目的进度，也不是系统架构。完整目录和看不清图时的文本在 [`NAVIGATION.md`](NAVIGATION.md)。
+
+本仓库只保存目录。每个使用这些 Skill 的项目，在自己的根目录放一份 `SKILL_MAP.md`。两个项目可以共用一个技能目录，使用历史仍然分开。以后新加的 Skill 会先标成未核实，直到有证据。只读过不算用过。
+
+这条核对不会自己跑。开工时运行 `navigation/skill-map sync`，并带上那个项目的绝对路径和 skills 目录。失败时原来的地图还在。命令、退出码，以及「一个项目不能写另一个项目的地图」：见 [`navigation/README.md`](navigation/README.md)。
+
 ## 档位和强制门禁
 
 日常类比：飞机起飞前的检查单。不是凭感觉「应该都弄好了」，而是在固定时刻按固定清单打勾；有一项必做的没过，就不起飞。
@@ -186,9 +194,12 @@ skills/
     SKILL.md      # 必需：YAML frontmatter（name、description）+ 给 agent 的步骤
     README.md     # 给人看的简短说明
     ...           # 配套文件、模板、配方、脚本
+navigation/       # 目录、核对命令，以及每个项目自己的使用地图
+NAVIGATION.md     # 生成的总导航；不是某个项目的使用记录
 LICENSE
 README.md
 README.zh-CN.md
+AGENTS.md
 ```
 
 ## 参与贡献
@@ -200,6 +211,8 @@ README.zh-CN.md
 - `SKILL.md` 用相对路径引用配套文件。
 - 没核实的内容不要写成已核实，要标明「未核实」。
 - 不要提交密钥或真实个人数据，示例里也不要。
+- 新 Skill 靠扫描 `skills/` 发现，不要把名字写进一份写死的清单。如果知道它和现有 Skill 的关系，写进 `navigation/catalog.json`，再重新生成 `NAVIGATION.md`（见 [`navigation/README.md`](navigation/README.md)）。关系不清楚就不要写，地图上会标成关系未知。
+- 不要把某个项目的使用状态写进本仓库。那份状态留在该项目自己的 `SKILL_MAP.md`。
 
 ## 许可证
 

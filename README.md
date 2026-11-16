@@ -53,6 +53,14 @@ flowchart LR
 
 You don't need all of them. Start wherever you are: no architecture yet → `architecture-from-idea`; architecture agreed → `agent-constraint-docs`; docs in place → `vibe-coding-loop` (once per task, not one chat for a whole app); a no-exceptions rule → `architecture-guardrails`; a bug at any stage → `debug-with-logs`; starting or releasing → `project-essentials`; building an agent that wakes on events or timers → `always-on-agents`.
 
+### Skills usage map
+
+The diagram above says how the skills relate. It is not a project's progress, and it is not a system architecture. The full catalog, including a text fallback for the picture, is [`NAVIGATION.md`](NAVIGATION.md).
+
+This repository stores the catalog only. Each project that uses the skills keeps its own `SKILL_MAP.md` in that project's root, so two projects can share one skills directory and still have different histories. A skill added later shows up as unverified until there is evidence. Reading a skill is not evidence.
+
+The check does not run by itself. At the start of work, run `navigation/skill-map sync` with the absolute path of that project and the skills directory. On failure it leaves the previous map in place. Command, exit codes, and the rule that one project must not write another's map: [`navigation/README.md`](navigation/README.md).
+
 ## Tiers and mandatory gates
 
 Everyday version: a pre-flight checklist. Not "I think it's all fine", but a fixed list ticked at fixed moments; one required item fails, the plane does not take off.
@@ -186,9 +194,12 @@ skills/
     SKILL.md      # required: YAML frontmatter (name, description) + instructions for the agent
     README.md     # short human-readable summary
     ...           # helper files, templates, recipes, scripts
+navigation/       # catalog, checker, and per-project map command
+NAVIGATION.md     # generated catalog page; not a project's usage record
 LICENSE
 README.md
 README.zh-CN.md
+AGENTS.md
 ```
 
 ## Contributing
@@ -200,6 +211,8 @@ Issues and pull requests are welcome — bug reports, unclear steps, broken link
 - Reference helper files with relative paths from `SKILL.md`.
 - Don't state anything as verified unless you checked it; mark the rest as unverified.
 - Never commit secrets or real personal data, including in examples.
+- A new skill is discovered by scanning `skills/`. Do not add its name to a hardcoded list. If you know how it relates to the others, add that to `navigation/catalog.json` and regenerate `NAVIGATION.md` (see [`navigation/README.md`](navigation/README.md)). If you do not know, leave it out; the map shows the relationship as unknown.
+- Do not record a project's usage status in this repository. That stays in the project's own `SKILL_MAP.md`.
 
 ## License
 

@@ -22,6 +22,8 @@ description: >-
 
 用户有软件想法或新项目、要决定怎么分层/模块化、或问「先做 demo 还是长期项目」时使用本 skill。先分流，再定架构，再写约束文档。未确认路径前不要写业务代码。
 
+**使用地图。** 开工时运行技能库的 `navigation/skill-map sync --project <本项目根的绝对路径> --source <skills 目录的绝对路径>`。这条命令不会自动执行，也没有后台进程。它只写本项目的 `SKILL_MAP.md` 和 `.skill-map/usage.json`，不改技能库，也不改别的项目。失败就停下，原来的地图还在；不要猜，不要把使用记录写进技能目录。新 Skill 标成未核实。只读过文件不算用过，没有证据就是未核实。详见仓库 `NAVIGATION.md`。
+
 配套 skill（本步做完再打开，不要一上来全读）：
 - 架构定稿后写给 AI 的文档：`agent-constraint-docs`
 - 每个编码任务的循环：`vibe-coding-loop`
@@ -156,3 +158,4 @@ Clean Architecture 的五个独立性（Uncle Bob）：独立于框架、可测�
 - [ ] 有依赖允许表和禁止清单，长期项目的硬规则已标机器检查或 review
 - [ ] 没有编造未测量的性能数字
 - [ ] 写下了出问题怎么定位：日志决定有 ADR（原型至少满足 DEMO.md 的日志底线）
+- [ ] 若这一步实际用了本 skill：本项目 `SKILL_MAP.md` 有状态、证据和下一步理由。只打开文件不算用过

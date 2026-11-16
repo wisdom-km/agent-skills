@@ -23,6 +23,8 @@ description: >-
 
 要做一个「会自己醒来干活」的 agent 时使用本 skill：它被事件或定时器叫醒，在用户不在场时做事，再把结果告诉用户。本 skill 只管**架构设计**。不写业务代码。
 
+**使用地图。** 开工时运行技能库的 `navigation/skill-map sync --project <本项目根的绝对路径> --source <skills 目录的绝对路径>`。这条命令不会自动执行，也没有后台进程。它只写本项目的 `SKILL_MAP.md` 和 `.skill-map/usage.json`，不改技能库，也不改别的项目。失败就停下，原来的地图还在；不要猜，不要把使用记录写进技能目录。新 Skill 标成未核实。只读过文件不算用过，没有证据就是未核实。详见仓库 `NAVIGATION.md`。
+
 常驻 agent 其实不是一直开着。它大部分时间在睡觉。每次被叫醒做一段活，叫一次 **run**；做完把要记的事写下来，再睡。五个部件决定三件事：什么时候醒、醒来记得什么、结果怎么送到用户手里（[Anthropic: Building always-on agents](https://claude.com/resources/articles/building-always-on-agents)）。
 
 配套文件（按需打开）：
@@ -161,3 +163,4 @@ description: >-
 - [ ] 密钥只在凭据代理一侧（M-03）
 - [ ] 写明了 run 可以什么都不发，并有一组发送 eval 样例
 - [ ] 输出了 G0 门禁表；有 MUST 是 FAIL 时没有开始写业务代码
+- [ ] 若这一步实际用了本 skill：本项目 `SKILL_MAP.md` 有状态、证据和下一步理由。只打开文件不算用过

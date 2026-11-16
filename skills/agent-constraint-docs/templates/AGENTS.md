@@ -13,6 +13,10 @@
 - [RULES.md](RULES.md) 禁止清单
 - [RULES.md](RULES.md) Definition of Done
 
+## Skills 使用地图
+
+开工时运行技能库的 `navigation/skill-map sync --project <本项目根的绝对路径> --source <skills 目录的绝对路径>`。命令不会自己跑。它只写本项目根目录的 `SKILL_MAP.md`。失败就报告，不要猜，不要写到别的目录。这是 Skills 用没用过，不是功能进度。没有证据就是未核实。细节见技能库 `NAVIGATION.md`。
+
 ## 强制项（MUST）
 
 编号和细则来自 `project-essentials` 的 MANDATORY.md，这里只写本项目用到的结论。
