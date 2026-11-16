@@ -4,12 +4,12 @@
 from __future__ import annotations
 
 import builtins
+import errno
 import hashlib
 import io
 import json
 import os
 import shutil
-import stat
 import subprocess
 import sys
 import tempfile
@@ -48,6 +48,129 @@ MANDATORY_SECTION = """## 强制项（MUST）
 - 关口：开工前 G0；说「完成」前 G1；合入前 G2；发布前 G3。到关口输出门禁表，每项 PASS（附证据）/ FAIL / WAIVED / N/A。
 - **任一 MUST 是 FAIL：报告「未满足：M-xx」和补法，不说「完成」，不合入，不发布。**
 """
+
+
+def quote_cmd(value):
+    return '"' + str(value).replace('"', '""') + '"'
+
+
+def run_launcher(args, env, cwd):
+    """Run the launcher this OS can execute.
+
+    Windows CreateProcess rejects the extensionless POSIX script (WinError 193).
+    cmd.exe runs skill-map.cmd there. POSIX runs navigation/skill-map.
+    """
+    if os.name == "nt":
+        script = REPO / "navigation" / "skill-map.cmd"
+        command = " ".join(quote_cmd(part) for part in [script, *args])
+        return subprocess.run(
+            command,
+            shell=True,
+            cwd=str(cwd),
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+    return subprocess.run(
+        [str(REPO / "navigation" / "skill-map"), *args],
+        cwd=str(cwd),
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+
+def write_executable(path: Path, body: str) -> None:
+    path.write_text(body, encoding="utf-8", newline="\n")
+    path.chmod(0o755)
+
+
+def write_cmd_file(path: Path, body: str) -> None:
+    path.write_bytes(body.replace("\n", "\r\n").encode("ascii"))
+
+
+def windows_py_launcher():
+    candidates = []
+    system_root = os.environ.get("SystemRoot", r"C:\Windows")
+    candidates.append(Path(system_root) / "py.exe")
+    candidates.append(Path(system_root) / "System32" / "py.exe")
+    local = os.environ.get("LocalAppData")
+    if local:
+        candidates.append(Path(local) / "Programs" / "Python" / "Launcher" / "py.exe")
+    for directory in os.environ.get("PATH", "").split(os.pathsep):
+        if directory:
+            candidates.append(Path(directory) / "py.exe")
+    for candidate in candidates:
+        if candidate.is_file() and candidate.stat().st_size > 0:
+            return candidate
+    return None
+
+
+def symlink_or_skip(test, link: Path, target: Path) -> None:
+    """Create link. If this account cannot, skip only this symlink assertion."""
+    try:
+        link.symlink_to(target)
+    except OSError as exc:
+        winerror = getattr(exc, "winerror", None)
+        denied = winerror == 1314 or (os.name == "nt" and exc.errno in {errno.EPERM, errno.EACCES})
+        if not denied:
+            raise
+        test.skipTest(
+            "OS symlink was not created "
+            f"({exc}). Symlink refusal is NOT verified on this run. "
+            "The file lock, unreadable-input failure, and the non-symlink outside-path guard still run."
+        )
+
+
+class _DenyRead:
+    """Make one file's read raise PermissionError for the duration of a command.
+
+    POSIX first uses chmod(0) when that actually denies read. Windows chmod(0)
+    leaves the file readable, so the same OSError is injected at Path.read_text,
+    which is the read skill_map.py performs. Either way the command must exit
+    unreadable and leave the previous map bytes alone.
+    """
+
+    def __init__(self, path: Path):
+        self.path = path
+        self.mode = path.stat().st_mode
+        self.real_read_text = None
+        self.used = ""
+
+    def __enter__(self):
+        self.path.chmod(0)
+        try:
+            self.path.read_bytes()
+        except OSError:
+            self.used = "chmod"
+            return self
+        self.path.chmod(self.mode)
+        target = self.path.resolve()
+        real = Path.read_text
+
+        def wrapped(path_self, *args, **kwargs):
+            try:
+                if path_self.resolve() == target:
+                    raise PermissionError(13, "Permission denied")
+            except PermissionError:
+                raise
+            except OSError:
+                pass
+            return real(path_self, *args, **kwargs)
+
+        self.real_read_text = real
+        Path.read_text = wrapped
+        self.used = "injected"
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        if self.used == "chmod":
+            self.path.chmod(self.mode)
+        elif self.real_read_text is not None:
+            Path.read_text = self.real_read_text
+        return False
 
 
 def run(argv, cwd=None):
@@ -515,12 +638,33 @@ class IsolationTests(SkillMapTestCase):
         b_map = (project_b / "SKILL_MAP.md").read_bytes()
         b_usage = (project_b / ".skill-map" / "usage.json").read_bytes()
         (project_a / "SKILL_MAP.md").unlink()
-        (project_a / "SKILL_MAP.md").symlink_to(project_b / "SKILL_MAP.md")
+        symlink_or_skip(self, project_a / "SKILL_MAP.md", project_b / "SKILL_MAP.md")
         code, _, err = self.sync(project_a, source)
         self.assertNotEqual(code, 0)
         self.assertIn("outside the project", err)
         self.assertEqual((project_b / "SKILL_MAP.md").read_bytes(), b_map)
         self.assertEqual((project_b / ".skill-map" / "usage.json").read_bytes(), b_usage)
+
+    def test_sync_refuses_a_map_path_outside_the_project_without_a_symlink(self):
+        project = self.project("guard")
+        source = self.source_with(["alpha"])
+        outside = self.tmp / "outside map.md"
+        outside.write_bytes(b"keep-outside")
+        real_map_path = skill_map.map_path
+
+        def outside_map(_project):
+            return outside
+
+        skill_map.map_path = outside_map
+        try:
+            code, _, err = self.sync(project, source)
+        finally:
+            skill_map.map_path = real_map_path
+        self.assertEqual(code, skill_map.EXIT_USAGE, err)
+        self.assertIn("outside the project", err)
+        self.assertEqual(outside.read_bytes(), b"keep-outside")
+        self.assertFalse((project / "SKILL_MAP.md").exists())
+        self.assertFalse((project / ".skill-map" / "usage.json").exists())
 
 
 class FailureTests(SkillMapTestCase):
@@ -542,96 +686,116 @@ class FailureTests(SkillMapTestCase):
         self.assertFalse((Path("/relative-project")).exists())
         self.assertFalse((Path("/tmp/relative-project")).exists())
 
-    def test_missing_runtime_fails_before_any_write(self):
+    def test_launcher_missing_runtime_writes_nothing(self):
         project = self.project("runtime project")
         source = self.source_with(["alpha"])
         empty_path = self.tmp / "empty-path"
         empty_path.mkdir()
         env = os.environ.copy()
         env["PATH"] = str(empty_path)
-        completed = subprocess.run(
-            [
-                str(REPO / "navigation" / "skill-map"),
-                "sync",
-                "--project",
-                str(project),
-                "--source",
-                str(source),
-            ],
-            cwd="/",
-            env=env,
-            text=True,
-            capture_output=True,
-            check=False,
+        completed = run_launcher(
+            ["sync", "--project", str(project), "--source", str(source)],
+            env,
+            self.tmp,
         )
-        self.assertEqual(completed.returncode, 127)
+        self.assertEqual(completed.returncode, 127, completed.stderr)
         self.assertIn("no working Python 3", completed.stderr)
         self.assertIn("9009", completed.stderr)
         self.assertIn("Nothing was written", completed.stderr)
         self.assertEqual(list(project.iterdir()), [])
         self.assertFalse((source / "SKILL_MAP.md").exists())
 
-    def test_store_alias_is_skipped_and_the_real_exit_code_is_kept(self):
+    def test_launcher_skips_bad_alias_and_keeps_the_interpreter_exit_code(self):
         project = self.project("alias project")
-        bindir = self.tmp / "bin"
-        bindir.mkdir()
-        stub = "#!/bin/sh\nexit 9009\n"
-        for name in ("py", "python3"):
-            path = bindir / name
-            path.write_text(stub, encoding="utf-8")
-            path.chmod(0o755)
-        real = bindir / "python"
-        real.write_text(f"#!/bin/sh\nexec {sys.executable} \"$@\"\n", encoding="utf-8")
-        real.chmod(0o755)
-        env = os.environ.copy()
-        env["PATH"] = str(bindir)
         missing = self.tmp / "missing source"
-        completed = subprocess.run(
-            [
-                str(REPO / "navigation" / "skill-map"),
-                "sync",
-                "--project",
-                str(project),
-                "--source",
-                str(missing),
-            ],
-            cwd="/",
-            env=env,
-            text=True,
-            capture_output=True,
-            check=False,
+        env = os.environ.copy()
+        if os.name == "nt":
+            python_dir = str(Path(sys.executable).resolve().parent)
+            fallback = self.tmp / "fallback-stubs"
+            fallback.mkdir()
+            write_cmd_file(fallback / "py.cmd", "@echo off\nexit /b 9009\n")
+            env["PATH"] = str(fallback) + os.pathsep + python_dir
+        else:
+            bindir = self.tmp / "bin"
+            bindir.mkdir()
+            stub = "#!/bin/sh\nexit 9009\n"
+            write_executable(bindir / "py", stub)
+            write_executable(bindir / "python3", stub)
+            write_executable(bindir / "python", f'#!/bin/sh\nexec {sys.executable} "$@"\n')
+            env["PATH"] = str(bindir)
+        completed = run_launcher(
+            ["sync", "--project", str(project), "--source", str(missing)],
+            env,
+            self.tmp,
         )
-        self.assertEqual(completed.returncode, skill_map.EXIT_MISSING, completed.stderr)
-        self.assertNotEqual(completed.returncode, 0)
+        self.assertEqual(completed.returncode, skill_map.EXIT_MISSING, completed.stderr + completed.stdout)
         self.assertNotEqual(completed.returncode, 9009)
         self.assertIn("does not exist", completed.stderr)
         self.assertFalse((project / "SKILL_MAP.md").exists())
         self.assertFalse((project / ".skill-map").exists())
 
-        only_stub = self.tmp / "stub-only"
-        only_stub.mkdir()
-        for name in ("py", "python3", "python"):
-            path = only_stub / name
-            path.write_text(stub, encoding="utf-8")
-            path.chmod(0o755)
-        env["PATH"] = str(only_stub)
-        blocked = subprocess.run(
-            [
-                str(REPO / "navigation" / "skill-map"),
-                "sync",
-                "--project",
-                str(project),
-                "--source",
-                str(self.source_with(["alpha"])),
-            ],
-            cwd="/",
-            env=env,
-            text=True,
-            capture_output=True,
-            check=False,
+        blocked_project = self.project("blocked project")
+        if os.name == "nt":
+            only = self.tmp / "stub-only"
+            only.mkdir()
+            for name in ("py", "python", "python3"):
+                write_cmd_file(only / f"{name}.cmd", "@echo off\nexit /b 9009\n")
+            env["PATH"] = str(only)
+        else:
+            only = self.tmp / "stub-only"
+            only.mkdir()
+            stub = "#!/bin/sh\nexit 9009\n"
+            for name in ("py", "python3", "python"):
+                write_executable(only / name, stub)
+            env["PATH"] = str(only)
+        blocked = run_launcher(
+            ["sync", "--project", str(blocked_project), "--source", str(self.source_with(["alpha"]))],
+            env,
+            self.tmp,
         )
-        self.assertEqual(blocked.returncode, 127, blocked.stderr)
+        self.assertEqual(blocked.returncode, 127, blocked.stderr + blocked.stdout)
         self.assertIn("9009", blocked.stderr)
+        self.assertIn("Nothing was written", blocked.stderr)
+        self.assertEqual(list(blocked_project.iterdir()), [])
+
+    def test_launcher_prefers_its_first_real_interpreter(self):
+        project = self.project("prefer project")
+        missing = self.tmp / "missing source 2"
+        env = os.environ.copy()
+        if os.name == "nt":
+            py_launcher = windows_py_launcher()
+            self.assertIsNotNone(
+                py_launcher,
+                "Windows cmd selection was not tested: py.exe was not found. "
+                "Refusing to report a pass without the py -3 candidate.",
+            )
+            bad = self.tmp / "bad-later"
+            bad.mkdir()
+            for name in ("python", "python3"):
+                write_cmd_file(bad / f"{name}.cmd", "@echo off\nexit /b 17\n")
+            python_dir = str(Path(sys.executable).resolve().parent)
+            env["PATH"] = os.pathsep.join([str(bad), str(py_launcher.parent), python_dir])
+        else:
+            bindir = self.tmp / "prefer-bin"
+            bindir.mkdir()
+            stub = "#!/bin/sh\nexit 9009\n"
+            write_executable(
+                bindir / "py",
+                "#!/bin/sh\n"
+                'if [ "$1" = "-3" ]; then shift; fi\n'
+                f'exec {sys.executable} "$@"\n',
+            )
+            write_executable(bindir / "python3", stub)
+            write_executable(bindir / "python", stub)
+            env["PATH"] = str(bindir)
+        completed = run_launcher(
+            ["sync", "--project", str(project), "--source", str(missing)],
+            env,
+            self.tmp,
+        )
+        self.assertEqual(completed.returncode, skill_map.EXIT_MISSING, completed.stderr + completed.stdout)
+        self.assertNotIn(completed.returncode, (0, 17, 9009))
+        self.assertIn("does not exist", completed.stderr)
         self.assertFalse((project / "SKILL_MAP.md").exists())
         self.assertFalse((project / ".skill-map").exists())
 
@@ -658,24 +822,15 @@ class FailureTests(SkillMapTestCase):
         write_skill(source, "beta", "Use when beta is valid again.")
 
         skill_file = source / "alpha" / "SKILL.md"
-        skill_file.chmod(0)
-        try:
+        skill_denial = _DenyRead(skill_file)
+        with skill_denial:
             code, _, err = self.sync(project, source)
             self.assertEqual(code, skill_map.EXIT_UNREADABLE, err)
             self.assertIn("cannot read", err)
             self.assertEqual((project / ".skill-map" / "usage.json").read_bytes(), usage)
             self.assertEqual((project / "SKILL_MAP.md").read_bytes(), view)
-        finally:
-            skill_file.chmod(stat.S_IRUSR | stat.S_IWUSR)
-
-        dangling = source / "gamma"
-        dangling.mkdir()
-        (dangling / "SKILL.md").symlink_to(source / "no-such-skill.md")
-        code, _, err = self.sync(project, source)
-        self.assertEqual(code, skill_map.EXIT_UNREADABLE, err)
-        self.assertIn("dangling symlink", err)
-        self.assertEqual((project / ".skill-map" / "usage.json").read_bytes(), usage)
-        shutil.rmtree(dangling)
+        if os.name != "nt":
+            self.assertEqual(skill_denial.used, "chmod")
 
         usage_path = project / ".skill-map" / "usage.json"
         usage_path.write_text("{", encoding="utf-8")
@@ -694,14 +849,29 @@ class FailureTests(SkillMapTestCase):
         self.assertEqual((project / "SKILL_MAP.md").read_bytes(), b"\xff\xfe not utf-8")
         (project / "SKILL_MAP.md").write_bytes(view)
 
-        usage_path.chmod(0)
-        try:
+        usage_denial = _DenyRead(usage_path)
+        with usage_denial:
             code, _, err = self.sync(project, source)
             self.assertEqual(code, skill_map.EXIT_UNREADABLE, err)
             self.assertIn("cannot read", err)
             self.assertEqual((project / "SKILL_MAP.md").read_bytes(), view)
-        finally:
-            usage_path.chmod(stat.S_IRUSR | stat.S_IWUSR)
+        if os.name != "nt":
+            self.assertEqual(usage_denial.used, "chmod")
+
+    def test_dangling_skill_symlink_is_unreadable_and_does_not_write(self):
+        project = self.project()
+        source = self.source_with(["alpha"])
+        self.assertEqual(self.sync(project, source)[0], 0)
+        usage = (project / ".skill-map" / "usage.json").read_bytes()
+        view = (project / "SKILL_MAP.md").read_bytes()
+        dangling = source / "gamma"
+        dangling.mkdir()
+        symlink_or_skip(self, dangling / "SKILL.md", source / "no-such-skill.md")
+        code, _, err = self.sync(project, source)
+        self.assertEqual(code, skill_map.EXIT_UNREADABLE, err)
+        self.assertIn("dangling symlink", err)
+        self.assertEqual((project / ".skill-map" / "usage.json").read_bytes(), usage)
+        self.assertEqual((project / "SKILL_MAP.md").read_bytes(), view)
 
     def test_lock_and_revision_conflict_do_not_write(self):
         project = self.project()
@@ -781,8 +951,6 @@ class FailureTests(SkillMapTestCase):
     def test_windows_backend_locks_a_file_and_does_not_open_the_directory(self):
         project = self.project()
         source = self.source_with(["alpha"])
-        outside = self.tmp / "outside-lock"
-        outside.write_bytes(b"keep")
         opened = []
         real_open = os.open
 
@@ -846,12 +1014,21 @@ class FailureTests(SkillMapTestCase):
             skill_map.os.open = real_open
             sys.modules.pop("msvcrt", None)
 
-        (project / ".skill-map.lock").unlink()
-        (project / ".skill-map.lock").symlink_to(outside)
+    def test_symlink_lock_file_is_refused_without_touching_its_target(self):
+        project = self.project()
+        source = self.source_with(["alpha"])
+        self.assertEqual(self.sync(project, source)[0], 0)
+        before = (project / "SKILL_MAP.md").read_bytes()
+        outside = self.tmp / "outside-lock"
+        outside.write_bytes(b"keep")
+        lock = project / ".skill-map.lock"
+        lock.unlink()
+        symlink_or_skip(self, lock, outside)
         code, _, err = self.sync(project, source)
         self.assertEqual(code, skill_map.EXIT_USAGE, err)
         self.assertIn("symlink", err)
         self.assertEqual(outside.read_bytes(), b"keep")
+        self.assertEqual((project / "SKILL_MAP.md").read_bytes(), before)
 
     def test_failed_replace_restores_both_files(self):
         project = self.project()
