@@ -59,7 +59,7 @@ The diagram above says how the skills relate. It is not a project's progress, an
 
 This repository stores the catalog only. Each project that uses the skills keeps its own `SKILL_MAP.md` in that project's root, so two projects can share one skills directory and still have different histories. A skill added later shows up as unverified until there is evidence. Reading a skill is not evidence.
 
-The check does not run by itself. At the start of work, run `navigation/skill-map sync` with the absolute path of that project and the skills directory. On failure it leaves the previous map in place. Command, exit codes, and the rule that one project must not write another's map: [`navigation/README.md`](navigation/README.md).
+The check does not run by itself. At the start of work, run `navigation/skill-map sync` with the absolute path of that project and the skills directory. On Windows cmd or PowerShell, run `py -3 <library>\navigation\skill_map.py sync` or `navigation\skill-map.cmd` instead; a `python3` that exits 9009 is a Store alias, not Python, and the extension-less `skill-map` file is a POSIX script. On failure the command's own exit code is the result, and the previous map stays in place. Command, exit codes, and the rule that one project must not write another's map: [`navigation/README.md`](navigation/README.md).
 
 ## Tiers and mandatory gates
 

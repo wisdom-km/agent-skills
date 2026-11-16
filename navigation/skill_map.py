@@ -12,6 +12,7 @@ not execute skill files. It only reads them as text.
 from __future__ import annotations
 
 import argparse
+import errno
 import json
 import os
 import re
@@ -504,40 +505,116 @@ def assert_write_stays_inside(project: Path, target: Path) -> None:
         )
 
 
-@contextmanager
-def project_lock(project: Path):
+LOCK_FILE_NAME = ".skill-map.lock"
+LOCK_HELD_MESSAGE = (
+    "another skill-map update holds the lock on this project. "
+    "Rerun after it finishes. Concurrent updates are not merged, and this command "
+    "does not write to any other project or to the skills source."
+)
+
+
+def select_lock_backend() -> str:
+    """File lock, never a directory fd. Windows has no fcntl and rejects opening a directory."""
+    if os.name == "nt":
+        return "msvcrt"
+    return "fcntl"
+
+
+def lock_path_for(project: Path) -> Path:
+    return project / LOCK_FILE_NAME
+
+
+def _open_lock_file(project: Path) -> int:
+    path = lock_path_for(project)
+    if path.is_symlink():
+        raise SkillMapError(
+            EXIT_USAGE,
+            f"refusing to use a symlink as the project lock: {path}. No map was written.",
+        )
+    assert_write_stays_inside(project, path)
+    flags = os.O_RDWR | os.O_CREAT
+    if hasattr(os, "O_CLOEXEC"):
+        flags |= os.O_CLOEXEC
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
     try:
-        fd = os.open(project, os.O_RDONLY)
+        fd = os.open(path, flags, 0o644)
     except OSError as exc:
+        if path.is_symlink() or exc.errno == errno.ELOOP:
+            raise SkillMapError(
+                EXIT_USAGE,
+                f"refusing to use a symlink as the project lock: {path}. No map was written.",
+            ) from exc
         raise SkillMapError(
             EXIT_UNREADABLE,
-            f"cannot lock project root: {project}: {exc.strerror or exc}",
+            f"cannot create the project lock file {path}: {exc.strerror or exc}. No map was written.",
         ) from exc
     try:
-        import fcntl
+        if os.fstat(fd).st_size < 1:
+            os.write(fd, b"\0")
+        os.lseek(fd, 0, os.SEEK_SET)
+    except OSError as exc:
+        os.close(fd)
+        raise SkillMapError(
+            EXIT_UNREADABLE,
+            f"cannot prepare the project lock file {path}: {exc.strerror or exc}. No map was written.",
+        ) from exc
+    return fd
 
+
+def _acquire_lock(fd: int) -> None:
+    if select_lock_backend() == "msvcrt":
+        import msvcrt
+
+        os.lseek(fd, 0, os.SEEK_SET)
+        try:
+            msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+        except OSError as exc:
+            raise SkillMapError(EXIT_LOCK, LOCK_HELD_MESSAGE) from exc
+        return
+    import fcntl
+
+    try:
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError as exc:
-        os.close(fd)
-        raise SkillMapError(
-            EXIT_LOCK,
-            "another skill-map update holds the lock on this project. "
-            "Rerun after it finishes. Concurrent updates are not merged, and this command "
-            "does not write to any other project or to the skills source.",
-        ) from exc
+        raise SkillMapError(EXIT_LOCK, LOCK_HELD_MESSAGE) from exc
     except OSError as exc:
-        os.close(fd)
         raise SkillMapError(
             EXIT_UNREADABLE,
-            f"cannot lock project root: {project}: {exc.strerror or exc}",
+            f"cannot lock this project: {exc.strerror or exc}. No map was written.",
         ) from exc
+
+
+def _release_lock(fd: int) -> None:
+    if select_lock_backend() == "msvcrt":
+        import msvcrt
+
+        os.lseek(fd, 0, os.SEEK_SET)
+        try:
+            msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+        except OSError:
+            return
+        return
+    import fcntl
+
+    fcntl.flock(fd, fcntl.LOCK_UN)
+
+
+@contextmanager
+def project_lock(project: Path):
+    fd = _open_lock_file(project)
+    try:
+        _acquire_lock(fd)
+    except BaseException:
+        os.close(fd)
+        raise
     try:
         yield
     finally:
-        import fcntl
-
-        fcntl.flock(fd, fcntl.LOCK_UN)
-        os.close(fd)
+        try:
+            _release_lock(fd)
+        finally:
+            os.close(fd)
 
 
 def usage_path(project: Path) -> Path:
@@ -1109,11 +1186,22 @@ def library_header() -> str:
             "The check does not run by itself, and there is no background process. At the start of work, the agent runs this command because the project's `AGENTS.md` tells it to. `--project` must be that project's absolute root. A relative project path is rejected so the current working directory cannot redirect the write.",
             "这条命令不会自己跑，也没有后台服务。开工时由 agent 按项目 `AGENTS.md` 里的说明来运行。`--project` 必须是那个项目根目录的绝对路径。相对的项目路径会被拒绝，避免当前工作目录把写入指到别处。",
             "",
+            "On macOS or Linux:",
+            "",
             "```bash",
             "/absolute/path/to/agent-skills/navigation/skill-map sync \\",
             "  --project /absolute/path/to/your-project \\",
             "  --source /absolute/path/to/agent-skills/skills",
             "```",
+            "",
+            "On Windows cmd or PowerShell, do not call `python3` until you have seen it print a Python 3 version. The Microsoft Store alias is not an interpreter and exits 9009. Use the Python launcher, or `skill-map.cmd`, which tries `py -3`, then `python`, then `python3`, and returns that program's exit code:",
+            "",
+            "```bat",
+            "py -3 C:\\absolute\\path\\to\\agent-skills\\navigation\\skill_map.py sync --project C:\\absolute\\path\\to\\your-project --source C:\\absolute\\path\\to\\agent-skills\\skills",
+            "```",
+            "",
+            "`navigation\\skill-map` without `.cmd` is a POSIX shell script. cmd and PowerShell cannot run it. Quote paths that contain spaces.",
+            "Windows 的 cmd 和 PowerShell 不要直接跑不带扩展名的 `skill-map`（那是 POSIX 脚本）。先用 `py -3`，或用 `skill-map.cmd`。`python3` 若退出 9009，就不是解释器。路径里有空格时加上引号。",
             "",
             "`--source` may be absolute, or relative to the project root (not to the current working directory). The command reads the source and writes only `<project>/SKILL_MAP.md` and `<project>/.skill-map/usage.json`.",
             "`--source` 可以是绝对路径，或者相对项目根（不是相对当前工作目录）。命令只读技能目录，只写 `<项目>/SKILL_MAP.md` 和 `<项目>/.skill-map/usage.json`。",

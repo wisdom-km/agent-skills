@@ -59,7 +59,7 @@ flowchart LR
 
 本仓库只保存目录。每个使用这些 Skill 的项目，在自己的根目录放一份 `SKILL_MAP.md`。两个项目可以共用一个技能目录，使用历史仍然分开。以后新加的 Skill 会先标成未核实，直到有证据。只读过不算用过。
 
-这条核对不会自己跑。开工时运行 `navigation/skill-map sync`，并带上那个项目的绝对路径和 skills 目录。失败时原来的地图还在。命令、退出码，以及「一个项目不能写另一个项目的地图」：见 [`navigation/README.md`](navigation/README.md)。
+这条核对不会自己跑。开工时运行 `navigation/skill-map sync`，并带上那个项目的绝对路径和 skills 目录。Windows 的 cmd / PowerShell 改用 `py -3 <技能库>\navigation\skill_map.py sync`，或 `navigation\skill-map.cmd`。`python3` 若退出 9009，那是商店别名，不是解释器；不带扩展名的 `skill-map` 是 POSIX 脚本，cmd 不能跑。失败时以这条命令自己的退出码为准，原来的地图还在。命令、退出码，以及「一个项目不能写另一个项目的地图」：见 [`navigation/README.md`](navigation/README.md)。
 
 ## 档位和强制门禁
 

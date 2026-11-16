@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import builtins
 import hashlib
 import io
 import json
@@ -525,11 +526,13 @@ class IsolationTests(SkillMapTestCase):
 class FailureTests(SkillMapTestCase):
     def test_missing_source_and_relative_project_do_not_write(self):
         project = self.project()
-        before = list(project.iterdir())
         code, _, err = self.sync(project, self.tmp / "missing source")
         self.assertEqual(code, skill_map.EXIT_MISSING)
         self.assertIn("does not exist", err)
-        self.assertEqual(list(project.iterdir()), before)
+        self.assertFalse((project / "SKILL_MAP.md").exists())
+        self.assertFalse((project / ".skill-map").exists())
+        names = {path.name for path in project.iterdir()}
+        self.assertTrue(names <= {".skill-map.lock"})
         code, _, err = run(["sync", "--project", "relative-project", "--source", "skills"], cwd=Path("/"))
         self.assertEqual(code, skill_map.EXIT_USAGE)
         self.assertIn("absolute", err)
@@ -562,9 +565,75 @@ class FailureTests(SkillMapTestCase):
             check=False,
         )
         self.assertEqual(completed.returncode, 127)
-        self.assertIn("python3 was not found", completed.stderr)
+        self.assertIn("no working Python 3", completed.stderr)
+        self.assertIn("9009", completed.stderr)
+        self.assertIn("Nothing was written", completed.stderr)
         self.assertEqual(list(project.iterdir()), [])
         self.assertFalse((source / "SKILL_MAP.md").exists())
+
+    def test_store_alias_is_skipped_and_the_real_exit_code_is_kept(self):
+        project = self.project("alias project")
+        bindir = self.tmp / "bin"
+        bindir.mkdir()
+        stub = "#!/bin/sh\nexit 9009\n"
+        for name in ("py", "python3"):
+            path = bindir / name
+            path.write_text(stub, encoding="utf-8")
+            path.chmod(0o755)
+        real = bindir / "python"
+        real.write_text(f"#!/bin/sh\nexec {sys.executable} \"$@\"\n", encoding="utf-8")
+        real.chmod(0o755)
+        env = os.environ.copy()
+        env["PATH"] = str(bindir)
+        missing = self.tmp / "missing source"
+        completed = subprocess.run(
+            [
+                str(REPO / "navigation" / "skill-map"),
+                "sync",
+                "--project",
+                str(project),
+                "--source",
+                str(missing),
+            ],
+            cwd="/",
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, skill_map.EXIT_MISSING, completed.stderr)
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertNotEqual(completed.returncode, 9009)
+        self.assertIn("does not exist", completed.stderr)
+        self.assertFalse((project / "SKILL_MAP.md").exists())
+        self.assertFalse((project / ".skill-map").exists())
+
+        only_stub = self.tmp / "stub-only"
+        only_stub.mkdir()
+        for name in ("py", "python3", "python"):
+            path = only_stub / name
+            path.write_text(stub, encoding="utf-8")
+            path.chmod(0o755)
+        env["PATH"] = str(only_stub)
+        blocked = subprocess.run(
+            [
+                str(REPO / "navigation" / "skill-map"),
+                "sync",
+                "--project",
+                str(project),
+                "--source",
+                str(self.source_with(["alpha"])),
+            ],
+            cwd="/",
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(blocked.returncode, 127, blocked.stderr)
+        self.assertIn("9009", blocked.stderr)
+        self.assertFalse((project / "SKILL_MAP.md").exists())
+        self.assertFalse((project / ".skill-map").exists())
 
     def test_malformed_and_unreadable_inputs_leave_the_project_unchanged(self):
         project = self.project()
@@ -644,25 +713,43 @@ class FailureTests(SkillMapTestCase):
             [
                 sys.executable,
                 "-c",
-                "import fcntl, os, sys, time; fd=os.open(sys.argv[1], os.O_RDONLY); fcntl.flock(fd, fcntl.LOCK_EX); time.sleep(30)",
+                textwrap.dedent(
+                    """\
+                    import sys, time
+                    from pathlib import Path
+                    sys.path.insert(0, sys.argv[2])
+                    import skill_map
+                    project = Path(sys.argv[1])
+                    while True:
+                        try:
+                            held = skill_map.project_lock(project)
+                            held.__enter__()
+                            break
+                        except skill_map.SkillMapError:
+                            time.sleep(0.02)
+                    time.sleep(30)
+                    """
+                ),
                 str(project),
+                str(REPO / "navigation"),
             ]
         )
         acquired = False
+        holder_note = "lock holder did not start"
         for _ in range(50):
-            probe = os.open(project, os.O_RDONLY)
+            if holder.poll() is not None:
+                holder_note = f"holder exited {holder.returncode}"
+                break
             try:
-                import fcntl
-
-                fcntl.flock(probe, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                fcntl.flock(probe, fcntl.LOCK_UN)
-            except BlockingIOError:
+                with skill_map.project_lock(project):
+                    pass
+            except skill_map.SkillMapError as exc:
+                if exc.code != skill_map.EXIT_LOCK:
+                    raise
                 acquired = True
                 break
-            finally:
-                os.close(probe)
             time.sleep(0.05)
-        self.assertTrue(acquired, "lock holder did not start")
+        self.assertTrue(acquired, holder_note)
         try:
             code, _, err = self.sync(project, source)
         finally:
@@ -690,6 +777,81 @@ class FailureTests(SkillMapTestCase):
         self.assertEqual(code, skill_map.EXIT_CONFLICT)
         self.assertIn("revision", err)
         self.assertEqual((project / ".skill-map" / "usage.json").read_bytes(), before_usage)
+
+    def test_windows_backend_locks_a_file_and_does_not_open_the_directory(self):
+        project = self.project()
+        source = self.source_with(["alpha"])
+        outside = self.tmp / "outside-lock"
+        outside.write_bytes(b"keep")
+        opened = []
+        real_open = os.open
+
+        def spy(path, flags, *args, **kwargs):
+            if not isinstance(path, int):
+                opened.append(Path(os.fsdecode(path)))
+            return real_open(path, flags, *args, **kwargs)
+
+        class FakeMsvcrt:
+            LK_NBLCK = 2
+            LK_UNLCK = 0
+
+            def __init__(self):
+                self.held = set()
+                self.calls = []
+
+            def locking(self, fd, mode, nbytes):
+                self.calls.append((mode, nbytes))
+                inode = os.fstat(fd).st_ino
+                if mode == self.LK_NBLCK:
+                    if inode in self.held:
+                        raise PermissionError(13, "Permission denied")
+                    self.held.add(inode)
+                    return
+                self.held.discard(inode)
+
+        fake = FakeMsvcrt()
+        real_import = builtins.__import__
+
+        def guard(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == "fcntl":
+                raise AssertionError("Windows lock path imported fcntl")
+            return real_import(name, globals, locals, fromlist, level)
+
+        sys.modules["msvcrt"] = fake
+        previous = skill_map.select_lock_backend
+        skill_map.select_lock_backend = lambda: "msvcrt"
+        skill_map.os.open = spy
+        builtins.__import__ = guard
+        try:
+            code, _, err = self.sync(project, source)
+            self.assertEqual(code, 0, err)
+            self.assertTrue((project / "SKILL_MAP.md").is_file())
+            self.assertTrue(any(path.name == ".skill-map.lock" for path in opened))
+            self.assertFalse(any(path.resolve() == project for path in opened))
+            self.assertIn((fake.LK_NBLCK, 1), fake.calls)
+            held = skill_map.project_lock(project)
+            held.__enter__()
+            try:
+                with self.assertRaises(skill_map.SkillMapError) as ctx:
+                    with skill_map.project_lock(project):
+                        pass
+                self.assertEqual(ctx.exception.code, skill_map.EXIT_LOCK)
+                self.assertIn("holds the lock", str(ctx.exception))
+            finally:
+                held.__exit__(None, None, None)
+            self.assertFalse((project / "SKILL_MAP.md").read_bytes() == b"")
+        finally:
+            builtins.__import__ = real_import
+            skill_map.select_lock_backend = previous
+            skill_map.os.open = real_open
+            sys.modules.pop("msvcrt", None)
+
+        (project / ".skill-map.lock").unlink()
+        (project / ".skill-map.lock").symlink_to(outside)
+        code, _, err = self.sync(project, source)
+        self.assertEqual(code, skill_map.EXIT_USAGE, err)
+        self.assertIn("symlink", err)
+        self.assertEqual(outside.read_bytes(), b"keep")
 
     def test_failed_replace_restores_both_files(self):
         project = self.project()
@@ -790,9 +952,16 @@ class RenderTests(SkillMapTestCase):
 
 class DocsTests(unittest.TestCase):
     def test_gates_and_public_pages_stay_within_bounds(self):
-        mandatory = (REPO / "skills" / "project-essentials" / "MANDATORY.md").read_bytes()
-        self.assertEqual(hashlib.sha256(mandatory).hexdigest(), MANDATORY_SHA256)
-        text = mandatory.decode("utf-8")
+        raw = (REPO / "skills" / "project-essentials" / "MANDATORY.md").read_bytes()
+        normalized = raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        self.assertEqual(hashlib.sha256(normalized).hexdigest(), MANDATORY_SHA256)
+        crlf = normalized.replace(b"\n", b"\r\n")
+        self.assertNotEqual(hashlib.sha256(crlf).hexdigest(), MANDATORY_SHA256)
+        self.assertEqual(
+            hashlib.sha256(crlf.replace(b"\r\n", b"\n").replace(b"\r", b"\n")).hexdigest(),
+            MANDATORY_SHA256,
+        )
+        text = normalized.decode("utf-8")
         for token in [f"M-{number:02d}" for number in range(1, 16)]:
             self.assertIn(token, text)
         for token in ("G0 开工门", "G1 任务完成门", "G2 合入门", "G3 发布门", "R-1", "R-2", "R-3"):
@@ -818,6 +987,21 @@ class DocsTests(unittest.TestCase):
             self.assertNotIn("approval log", page.lower())
         self.assertIn("SKILL_MAP.md", (REPO / "README.md").read_text(encoding="utf-8"))
         self.assertIn("SKILL_MAP.md", (REPO / "README.zh-CN.md").read_text(encoding="utf-8"))
+        self.assertIn("9009", agents)
+        self.assertIn("py -3", agents)
+        self.assertIn(MANDATORY_SECTION, agents)
+        cmd = (REPO / "navigation" / "skill-map.cmd").read_bytes()
+        self.assertTrue(cmd.endswith(b"\r\n"))
+        self.assertNotIn(b"\n", cmd.replace(b"\r\n", b""))
+        cmd_text = cmd.decode("ascii")
+        self.assertIn("py -3", cmd_text)
+        self.assertIn("exit /b %ERRORLEVEL%", cmd_text)
+        self.assertIn("9009", cmd_text)
+        self.assertNotIn("exit /b 0", cmd_text)
+        wrapper = (REPO / "navigation" / "skill-map").read_text(encoding="utf-8")
+        self.assertIn("python_ok py -3", wrapper)
+        self.assertIn("exec ", wrapper)
+        self.assertIn("9009", wrapper)
 
 
 if __name__ == "__main__":

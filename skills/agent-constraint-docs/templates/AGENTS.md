@@ -15,7 +15,7 @@
 
 ## Skills 使用地图
 
-开工时运行技能库的 `navigation/skill-map sync --project <本项目根的绝对路径> --source <skills 目录的绝对路径>`。命令不会自己跑。它只写本项目根目录的 `SKILL_MAP.md`。失败就报告，不要猜，不要写到别的目录。这是 Skills 用没用过，不是功能进度。没有证据就是未核实。细节见技能库 `NAVIGATION.md`。
+开工时核对，命令不会自己跑。Windows 的 cmd / PowerShell 不要跑不带扩展名的 `skill-map`（那是 POSIX 脚本）。运行 `py -3 <技能库绝对路径>\navigation\skill_map.py sync --project <本项目根绝对路径> --source <skills 绝对路径>`，或 `<技能库绝对路径>\navigation\skill-map.cmd sync`。`python3` 若退出 9009，那是商店别名，不是解释器，改用 `py -3`。macOS / Linux 运行 `<技能库绝对路径>/navigation/skill-map sync`，参数相同。它只写本项目根目录的 `SKILL_MAP.md` 和 `.skill-map/usage.json`。失败就报告这条命令自己的退出码和 stderr，不要手写地图，不要写到别的目录；后面再打印一行成功，不能把 9009 或 4 变成 0。这是 Skills 用没用过，不是功能进度。没有证据就是未核实。细节见技能库 `NAVIGATION.md`。
 
 ## 强制项（MUST）
 
