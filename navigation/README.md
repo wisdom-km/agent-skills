@@ -26,7 +26,7 @@ Windows cmd or PowerShell. The extension-less `skill-map` file is a POSIX shell 
 py -3 C:\absolute\path\to\agent-skills\navigation\skill_map.py sync --project C:\absolute\path\to\your-project --source C:\absolute\path\to\agent-skills\skills
 ```
 
-`navigation\skill-map.cmd` does the same lookup: `py -3`, then `python`, then `python3`. It returns that program's exit code. The shell script tries `py -3`, then `python3`, then `python`, and keeps the interpreter's exit code. Quote paths that contain spaces.
+`navigation\skill-map.cmd` does the same lookup: `py -3`, then `python`, then `python3`. It uses `call`, so a `.cmd` alias that exits 9009 returns and the next name is tried; without `call` that alias would not return. It then returns the chosen program's exit code. The shell script tries `py -3`, then `python3`, then `python`, and keeps the interpreter's exit code. Quote paths that contain spaces.
 
 `--project` is required and must be absolute. The command will not guess a project from the current working directory. `--source` may be absolute, or relative to that project root. The same relative source resolves to the same directory no matter which directory you ran the command from. Copy the command into the project; the skills directory can live outside the project.
 
@@ -133,7 +133,7 @@ Windows 的 cmd 或 PowerShell。不带扩展名的 `skill-map` 是 POSIX 脚本
 py -3 C:\绝对路径\agent-skills\navigation\skill_map.py sync --project C:\绝对路径\你的项目 --source C:\绝对路径\agent-skills\skills
 ```
 
-`navigation\skill-map.cmd` 按同样的顺序找解释器：`py -3`，然后 `python`，然后 `python3`，并把那个程序的退出码原样返回。壳脚本的顺序是 `py -3`、`python3`、`python`，同样保留解释器的退出码。路径里有空格时加上引号。
+`navigation\skill-map.cmd` 按同样的顺序找解释器：`py -3`，然后 `python`，然后 `python3`。它用 `call` 调用。退出 9009 的 `.cmd` 别名会返回，才会试下一个名字；不加 `call` 时控制权交出去，不会回来。然后把选中的那个程序的退出码原样返回。壳脚本的顺序是 `py -3`、`python3`、`python`，同样保留解释器的退出码。路径里有空格时加上引号。
 
 `--project` 必填，而且必须是绝对路径。命令不会根据当前工作目录猜测项目。`--source` 可以是绝对路径，也可以相对这个项目根。同一条相对路径，无论从哪个目录运行，都指向同一个技能目录。技能目录可以放在项目外面，把上面的命令抄进项目即可。
 

@@ -63,9 +63,17 @@ def run_launcher(args, env, cwd):
     if os.name == "nt":
         script = REPO / "navigation" / "skill-map.cmd"
         command = " ".join(quote_cmd(part) for part in [script, *args])
+        comspec = env.get("ComSpec") or env.get("COMSPEC") or ""
+        if not os.path.isabs(comspec):
+            system_root = env.get("SystemRoot") or r"C:\Windows"
+            comspec = os.path.join(system_root, "System32", "cmd.exe")
+        # /d skips AutoRun so a stripped PATH does not run the profile's DOSKEY.
+        # That does not skip a 9009 .cmd alias. skill-map.cmd must CALL it.
+        # The extra quotes are stripped by cmd /c, leaving the inner quoting.
+        line = quote_cmd(comspec) + ' /d /c "' + command + '"'
         return subprocess.run(
-            command,
-            shell=True,
+            line,
+            shell=False,
             cwd=str(cwd),
             env=env,
             text=True,
@@ -706,6 +714,10 @@ class FailureTests(SkillMapTestCase):
         self.assertFalse((source / "SKILL_MAP.md").exists())
 
     def test_launcher_skips_bad_alias_and_keeps_the_interpreter_exit_code(self):
+        # The Windows fixture is a py.cmd that exits 9009 ahead of python.exe.
+        # Without CALL, that .cmd does not return and 9009 becomes the process
+        # exit. cmd /d only suppresses AutoRun (the DOSKEY message). A pass
+        # still requires the real interpreter's exit code 3.
         project = self.project("alias project")
         missing = self.tmp / "missing source"
         env = os.environ.copy()
@@ -731,6 +743,8 @@ class FailureTests(SkillMapTestCase):
         self.assertEqual(completed.returncode, skill_map.EXIT_MISSING, completed.stderr + completed.stdout)
         self.assertNotEqual(completed.returncode, 9009)
         self.assertIn("does not exist", completed.stderr)
+        if os.name == "nt":
+            self.assertNotIn("DOSKEY", (completed.stdout + completed.stderr).upper())
         self.assertFalse((project / "SKILL_MAP.md").exists())
         self.assertFalse((project / ".skill-map").exists())
 
@@ -1171,10 +1185,21 @@ class DocsTests(unittest.TestCase):
         self.assertTrue(cmd.endswith(b"\r\n"))
         self.assertNotIn(b"\n", cmd.replace(b"\r\n", b""))
         cmd_text = cmd.decode("ascii")
-        self.assertIn("py -3", cmd_text)
+        self.assertIn("call py -3", cmd_text)
+        self.assertIn("call python -c", cmd_text)
+        self.assertIn("call python \"%SCRIPT%\"", cmd_text)
+        self.assertIn("call python3 -c", cmd_text)
+        self.assertIn("call python3 \"%SCRIPT%\"", cmd_text)
         self.assertIn("exit /b %ERRORLEVEL%", cmd_text)
         self.assertIn("9009", cmd_text)
         self.assertNotIn("exit /b 0", cmd_text)
+        for line in cmd_text.splitlines():
+            code = line.split("rem ", 1)[0].strip().lower()
+            for name in ("py ", "python ", "python3 "):
+                self.assertFalse(
+                    code.startswith(name),
+                    "bare batch call transfers control and does not return: " + line,
+                )
         wrapper = (REPO / "navigation" / "skill-map").read_text(encoding="utf-8")
         self.assertIn("python_ok py -3", wrapper)
         self.assertIn("exec ", wrapper)
