@@ -27,7 +27,7 @@ description: >-
 
 适用对象：编程基础不多、靠 AI 写代码的人。很多问题不是 AI 写错了代码，而是项目缺了一样基础件：没有存档点，改坏了回不去；密钥进了仓库；数据没备份。
 
-**使用地图。** 开工时核对，命令不会自动执行。Windows 的 cmd / PowerShell 运行 `py -3 <技能库绝对路径>\navigation\skill_map.py sync --project <本项目根绝对路径> --source <skills 绝对路径>`，或 `<技能库绝对路径>\navigation\skill-map.cmd sync`，参数相同。`python3` 若退出 9009，那是商店别名，不是解释器。macOS / Linux 运行 `<技能库绝对路径>/navigation/skill-map sync`，参数相同。这条命令没有后台进程。它只写本项目的 `SKILL_MAP.md` 和 `.skill-map/usage.json`，不改技能库，也不改别的项目。失败就停下，报告这条命令自己的退出码和 stderr，不要手写地图；后面再打印一行成功，不能把失败变成 0。原来的地图还在。不要猜，不要把使用记录写进技能目录。新 Skill 标成未核实。只读过文件不算用过，没有证据就是未核实。详见仓库 `NAVIGATION.md`。这不是门禁表，也不能代替 M-01 到 M-15。
+**使用地图。** 开工时用平时读文件的方式看技能库 `skills/` 里每个 `SKILL.md` 的名字，对照本项目根目录的 `SKILL_MAP.md`。新名字标成未核实，不要编造关系和用过的记录。没有脚本，装上或读过 Skill 也不会自动执行。读过不等于用过，用过不等于做完。一段工作结束时更新这份地图，并告诉用户：用过、正在用、下一步、卡住。项目根不清楚就不要写。详见 [`NAVIGATION.md`](../../NAVIGATION.md)。这不是门禁表，也不能代替 M-01 到 M-15。
 
 **哪些是强制的，以 [MANDATORY.md](MANDATORY.md) 为准**：M-01 到 M-15 每项按档位标 MUST / SHOULD / —，加 3 条不可豁免的红线、4 个关口（G0 开工、G1 任务完成、G2 合入、G3 发布）、门禁表格式和豁免规则。其他 Skill 只引用它的编号。
 

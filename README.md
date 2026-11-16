@@ -55,11 +55,11 @@ You don't need all of them. Start wherever you are: no architecture yet → `arc
 
 ### Skills usage map
 
-The diagram above says how the skills relate. It is not a project's progress, and it is not a system architecture. The full catalog, including a text fallback for the picture, is [`NAVIGATION.md`](NAVIGATION.md).
+The diagram above says how the skills relate. It is not a project's progress, and it is not a system architecture. You do not need Python, Node, or any other runtime to use it, and nothing runs in the background. Reading or installing a skill does not execute it.
 
-This repository stores the catalog only. Each project that uses the skills keeps its own `SKILL_MAP.md` in that project's root, so two projects can share one skills directory and still have different histories. A skill added later shows up as unverified until there is evidence. Reading a skill is not evidence.
+The picture and a text fallback are in [`NAVIGATION.md`](NAVIGATION.md). This repository stores that catalog only. Each project keeps its own `SKILL_MAP.md` in that project's root, copied from [`skills/agent-constraint-docs/templates/SKILL_MAP.md`](skills/agent-constraint-docs/templates/SKILL_MAP.md), so two projects can share one skills directory and still have different histories. A skill the agent has not judged yet stays unverified. Reading a skill is not use, and use is not finished work.
 
-The check does not run by itself. At the start of work, run `navigation/skill-map sync` with the absolute path of that project and the skills directory. On Windows cmd or PowerShell, run `py -3 <library>\navigation\skill_map.py sync` or `navigation\skill-map.cmd` instead; a `python3` that exits 9009 is a Store alias, not Python, and the extension-less `skill-map` file is a POSIX script. On failure the command's own exit code is the result, and the previous map stays in place. Command, exit codes, and the rule that one project must not write another's map: [`navigation/README.md`](navigation/README.md).
+At the start of work the agent reads the `skills/` folders with its ordinary file tools and updates that project's map. If the project root is unclear, it does not write. At the end of a work segment it tells you, in a few sentences: what it used, what it is using now, what is next, and what is blocked.
 
 ## Tiers and mandatory gates
 
@@ -194,8 +194,7 @@ skills/
     SKILL.md      # required: YAML frontmatter (name, description) + instructions for the agent
     README.md     # short human-readable summary
     ...           # helper files, templates, recipes, scripts
-navigation/       # catalog, checker, and per-project map command
-NAVIGATION.md     # generated catalog page; not a project's usage record
+NAVIGATION.md     # how the skills relate; not a project's usage record
 LICENSE
 README.md
 README.zh-CN.md
@@ -211,7 +210,7 @@ Issues and pull requests are welcome — bug reports, unclear steps, broken link
 - Reference helper files with relative paths from `SKILL.md`.
 - Don't state anything as verified unless you checked it; mark the rest as unverified.
 - Never commit secrets or real personal data, including in examples.
-- A new skill is discovered by scanning `skills/`. Do not add its name to a hardcoded list. If you know how it relates to the others, add that to `navigation/catalog.json` and regenerate `NAVIGATION.md` (see [`navigation/README.md`](navigation/README.md)). If you do not know, leave it out; the map shows the relationship as unknown.
+- A new skill is a new folder under `skills/`. If you know how it relates to the others, add a row to [`NAVIGATION.md`](NAVIGATION.md). If you do not know, leave the relationship unknown.
 - Do not record a project's usage status in this repository. That stays in the project's own `SKILL_MAP.md`.
 
 ## License

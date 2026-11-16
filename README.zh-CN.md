@@ -55,11 +55,11 @@ flowchart LR
 
 ### Skills 使用地图
 
-上面的图说的是这些 Skill 怎么关联。它不是某个项目的进度，也不是系统架构。完整目录和看不清图时的文本在 [`NAVIGATION.md`](NAVIGATION.md)。
+上面的图说的是这些 Skill 怎么关联。它不是某个项目的进度，也不是系统架构。不需要 Python、Node 或别的运行时，也没有后台进程。把 Skill 装上，或让 agent 读过，都不会自动执行。
 
-本仓库只保存目录。每个使用这些 Skill 的项目，在自己的根目录放一份 `SKILL_MAP.md`。两个项目可以共用一个技能目录，使用历史仍然分开。以后新加的 Skill 会先标成未核实，直到有证据。只读过不算用过。
+图和看不清图时的文本在 [`NAVIGATION.md`](NAVIGATION.md)。本仓库只保存这份目录。每个项目在自己的根目录放一份 `SKILL_MAP.md`，从 [`skills/agent-constraint-docs/templates/SKILL_MAP.md`](skills/agent-constraint-docs/templates/SKILL_MAP.md) 复制。两个项目可以共用一个技能目录，使用记录仍然分开。还没判断的 Skill 标成未核实。读过不等于用过，用过不等于做完。
 
-这条核对不会自己跑。开工时运行 `navigation/skill-map sync`，并带上那个项目的绝对路径和 skills 目录。Windows 的 cmd / PowerShell 改用 `py -3 <技能库>\navigation\skill_map.py sync`，或 `navigation\skill-map.cmd`。`python3` 若退出 9009，那是商店别名，不是解释器；不带扩展名的 `skill-map` 是 POSIX 脚本，cmd 不能跑。失败时以这条命令自己的退出码为准，原来的地图还在。命令、退出码，以及「一个项目不能写另一个项目的地图」：见 [`navigation/README.md`](navigation/README.md)。
+开工时 agent 用平时读文件的方式看 `skills/`，并更新那个项目自己的地图。项目根不清楚就不写。一段工作结束时，它用几句话告诉你：用过、正在用、下一步、卡住。
 
 ## 档位和强制门禁
 
@@ -194,8 +194,7 @@ skills/
     SKILL.md      # 必需：YAML frontmatter（name、description）+ 给 agent 的步骤
     README.md     # 给人看的简短说明
     ...           # 配套文件、模板、配方、脚本
-navigation/       # 目录、核对命令，以及每个项目自己的使用地图
-NAVIGATION.md     # 生成的总导航；不是某个项目的使用记录
+NAVIGATION.md     # 这些 Skill 怎么关联；不是某个项目的使用记录
 LICENSE
 README.md
 README.zh-CN.md
@@ -211,7 +210,7 @@ AGENTS.md
 - `SKILL.md` 用相对路径引用配套文件。
 - 没核实的内容不要写成已核实，要标明「未核实」。
 - 不要提交密钥或真实个人数据，示例里也不要。
-- 新 Skill 靠扫描 `skills/` 发现，不要把名字写进一份写死的清单。如果知道它和现有 Skill 的关系，写进 `navigation/catalog.json`，再重新生成 `NAVIGATION.md`（见 [`navigation/README.md`](navigation/README.md)）。关系不清楚就不要写，地图上会标成关系未知。
+- 新 Skill 就是 `skills/` 下的一个新目录。知道它和现有 Skill 的关系，就在 [`NAVIGATION.md`](NAVIGATION.md) 加一行。关系不清楚就不要编。
 - 不要把某个项目的使用状态写进本仓库。那份状态留在该项目自己的 `SKILL_MAP.md`。
 
 ## 许可证

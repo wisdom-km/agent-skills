@@ -22,7 +22,7 @@ description: >-
 
 用户有软件想法或新项目、要决定怎么分层/模块化、或问「先做 demo 还是长期项目」时使用本 skill。先分流，再定架构，再写约束文档。未确认路径前不要写业务代码。
 
-**使用地图。** 开工时核对，命令不会自动执行。Windows 的 cmd / PowerShell 运行 `py -3 <技能库绝对路径>\navigation\skill_map.py sync --project <本项目根绝对路径> --source <skills 绝对路径>`，或 `<技能库绝对路径>\navigation\skill-map.cmd sync`，参数相同。`python3` 若退出 9009，那是商店别名，不是解释器。macOS / Linux 运行 `<技能库绝对路径>/navigation/skill-map sync`，参数相同。这条命令没有后台进程。它只写本项目的 `SKILL_MAP.md` 和 `.skill-map/usage.json`，不改技能库，也不改别的项目。失败就停下，报告这条命令自己的退出码和 stderr，不要手写地图；后面再打印一行成功，不能把失败变成 0。原来的地图还在。不要猜，不要把使用记录写进技能目录。新 Skill 标成未核实。只读过文件不算用过，没有证据就是未核实。详见仓库 `NAVIGATION.md`。
+**使用地图。** 开工时用平时读文件的方式看技能库 `skills/` 里每个 `SKILL.md` 的名字，对照本项目根目录的 `SKILL_MAP.md`。新名字标成未核实，不要编造关系和用过的记录。没有脚本，装上或读过 Skill 也不会自动执行。读过不等于用过，用过不等于做完。一段工作结束时更新这份地图，并告诉用户：用过、正在用、下一步、卡住。项目根不清楚就不要写。详见 [`NAVIGATION.md`](../../NAVIGATION.md)。
 
 配套 skill（本步做完再打开，不要一上来全读）：
 - 架构定稿后写给 AI 的文档：`agent-constraint-docs`
