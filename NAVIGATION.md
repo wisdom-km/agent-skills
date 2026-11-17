@@ -6,6 +6,8 @@
 
 使用状态不写在这一页。每个项目在**自己的根目录**放两份文件：[`SKILL_MAP.md`](skills/agent-constraint-docs/templates/SKILL_MAP.md) 是记录，[`SKILL_MAP.html`](skills/agent-constraint-docs/templates/SKILL_MAP.html) 是给人看的静态路线图。两个项目可以共用这份技能库，各自的两份文件分开。不需要 Python、Node 或浏览器以外的任何程序。双击 HTML 用本机浏览器打开即可。打开它不会监视文件夹。
 
+安装之后，本文件在 agent 所扫描的 `skills` 目录的上一级，不在某一个 Skill 文件夹里。Skill 里的 `../../NAVIGATION.md` 指向这里，这里的 `skills/<名字>/...` 指向旁边的 Skill。项目自己的两份使用地图仍只放在该项目根目录，不放到这个上一级，也不放到全局技能目录。拷贝步骤，以及目标里已经有同名文件时要停下来，写在 README 的安装一节。
+
 ## 开工时 agent 做什么
 
 用平时读文件的方式看 `skills/` 下面每个带 `SKILL.md` 的目录名，再读本项目的 `SKILL_MAP.md`。
