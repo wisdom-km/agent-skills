@@ -24,7 +24,7 @@ description: >-
 
 当某条架构规则必须没有例外、应该由 linter、结构测试、CI 门禁或 agent hook 强制，而不是只写在文档里时，使用本 skill。典型对象：依赖方向、UI 不得引用 core 内部、文件大小上限、密钥不入库、生成文件不可手改。
 
-**使用地图。** 开工时用平时读文件的方式看技能库 `skills/` 里每个 `SKILL.md` 的名字，对照本项目根目录的 `SKILL_MAP.md`。新名字标成未核实，不要编造关系和用过的记录。没有脚本，装上或读过 Skill 也不会自动执行。读过不等于用过，用过不等于做完。一段工作结束时更新这份地图，并告诉用户：用过、正在用、下一步、卡住。项目根不清楚就不要写。详见 [`NAVIGATION.md`](../../NAVIGATION.md)。
+**使用地图。** 开工时用平时读文件的方式看技能库 `skills/` 里每个 `SKILL.md` 的名字，对照本项目根目录的 `SKILL_MAP.md`。新名字标成未核实，不要编造关系和用过的记录。没有脚本，装上或打开旁边的网页也不会自动更新。一段工作结束时按 [`NAVIGATION.md`](../../NAVIGATION.md) 先改 `SKILL_MAP.md`，再改旁边的 `SKILL_MAP.html`；网页没写成就留着旧页并说明它过期。然后告诉用户：用过、正在用、下一步、卡住。项目根不清楚就不要写。
 
 先有规则正文（通常在 `ARCHITECTURE.md` / `RULES.md`），再做本 skill。文档怎么写见 `agent-constraint-docs`。编码任务循环见 `vibe-coding-loop`。
 

@@ -57,9 +57,9 @@ flowchart LR
 
 上面的图说的是这些 Skill 怎么关联。它不是某个项目的进度，也不是系统架构。不需要 Python、Node 或别的运行时，也没有后台进程。把 Skill 装上，或让 agent 读过，都不会自动执行。
 
-图和看不清图时的文本在 [`NAVIGATION.md`](NAVIGATION.md)。本仓库只保存这份目录。每个项目在自己的根目录放一份 `SKILL_MAP.md`，从 [`skills/agent-constraint-docs/templates/SKILL_MAP.md`](skills/agent-constraint-docs/templates/SKILL_MAP.md) 复制。两个项目可以共用一个技能目录，使用记录仍然分开。还没判断的 Skill 标成未核实。读过不等于用过，用过不等于做完。
+图和看不清图时的文本在 [`NAVIGATION.md`](NAVIGATION.md)。本仓库只保存这份目录。每个项目在自己的根目录放两份文件：`SKILL_MAP.md` 是记录，`SKILL_MAP.html` 是双击就能看的静态路线图。从 [`SKILL_MAP.md`](skills/agent-constraint-docs/templates/SKILL_MAP.md) 和 [`SKILL_MAP.html`](skills/agent-constraint-docs/templates/SKILL_MAP.html) 复制。两个项目可以共用一个技能目录，使用记录仍然分开。还没判断的 Skill 标成未核实。读过不等于用过，用过不等于做完。
 
-开工时 agent 用平时读文件的方式看 `skills/`，并更新那个项目自己的地图。项目根不清楚就不写。一段工作结束时，它用几句话告诉你：用过、正在用、下一步、卡住。
+开工时 agent 用平时读文件的方式看 `skills/`。项目根不清楚就不写。一段工作结束时，它先改 Markdown，再改旁边的 HTML，并用几句话告诉你：用过、正在用、下一步、卡住。打开网页不会监视文件夹。网页没写成就留着旧页，并说明它过期。
 
 ## 档位和强制门禁
 
@@ -211,7 +211,7 @@ AGENTS.md
 - 没核实的内容不要写成已核实，要标明「未核实」。
 - 不要提交密钥或真实个人数据，示例里也不要。
 - 新 Skill 就是 `skills/` 下的一个新目录。知道它和现有 Skill 的关系，就在 [`NAVIGATION.md`](NAVIGATION.md) 加一行。关系不清楚就不要编。
-- 不要把某个项目的使用状态写进本仓库。那份状态留在该项目自己的 `SKILL_MAP.md`。
+- 不要把某个项目的使用状态写进本仓库。那份状态留在该项目自己的 `SKILL_MAP.md` 和 `SKILL_MAP.html`。
 
 ## 许可证
 

@@ -23,7 +23,7 @@ description: >-
 
 要做一个「会自己醒来干活」的 agent 时使用本 skill：它被事件或定时器叫醒，在用户不在场时做事，再把结果告诉用户。本 skill 只管**架构设计**。不写业务代码。
 
-**使用地图。** 开工时用平时读文件的方式看技能库 `skills/` 里每个 `SKILL.md` 的名字，对照本项目根目录的 `SKILL_MAP.md`。新名字标成未核实，不要编造关系和用过的记录。没有脚本，装上或读过 Skill 也不会自动执行。读过不等于用过，用过不等于做完。一段工作结束时更新这份地图，并告诉用户：用过、正在用、下一步、卡住。项目根不清楚就不要写。详见 [`NAVIGATION.md`](../../NAVIGATION.md)。
+**使用地图。** 开工时用平时读文件的方式看技能库 `skills/` 里每个 `SKILL.md` 的名字，对照本项目根目录的 `SKILL_MAP.md`。新名字标成未核实，不要编造关系和用过的记录。没有脚本，装上或打开旁边的网页也不会自动更新。一段工作结束时按 [`NAVIGATION.md`](../../NAVIGATION.md) 先改 `SKILL_MAP.md`，再改旁边的 `SKILL_MAP.html`；网页没写成就留着旧页并说明它过期。然后告诉用户：用过、正在用、下一步、卡住。项目根不清楚就不要写。
 
 常驻 agent 其实不是一直开着。它大部分时间在睡觉。每次被叫醒做一段活，叫一次 **run**；做完把要记的事写下来，再睡。五个部件决定三件事：什么时候醒、醒来记得什么、结果怎么送到用户手里（[Anthropic: Building always-on agents](https://claude.com/resources/articles/building-always-on-agents)）。
 

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skills 使用地图</title>
+<!--
+空白模板。七个路线上的名字都是未核实，没有编造使用记录。
+维护步骤只写在技能库 NAVIGATION.md。本文件不连外部字体、脚本、图片或网络。
+改状态时，路线节点和「站点说明」里的状态词要写成一样，并和 SKILL_MAP.md 的记录标记相同。
+本页生成时间不能拿来充当源更新时间。路线以外的名字不要加连线。
+-->
+<style>
+:root {
+  --paper: #f3efe6;
+  --sheet: #fffdf8;
+  --ink: #1c1915;
+  --muted: #4a453f;
+  --line: #8d8478;
+  --rule: #c8bfb0;
+  --using: #f6d48a;
+  --using-bar: #8a5a10;
+  --next: #d7e4f7;
+  --next-bar: #1d4f9c;
+  --used: #e3f0e6;
+  --used-bar: #245c38;
+  --blocked: #f8e0da;
+  --blocked-bar: #7a2e24;
+  --off: #ece7df;
+  --off-bar: #6e675e;
+  --cond: #d7efec;
+  --cond-bar: #0e5f5c;
+  --focus: #1d4f9c;
+}
+* { box-sizing: border-box; }
+html { color-scheme: light; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+a { color: inherit; }
+.page { max-width: 74rem; margin: 0 auto; padding: 1.1rem 1.15rem 2.5rem; }
+.skip {
+  position: absolute;
+  left: 0.5rem;
+  top: 0.5rem;
+  transform: translateY(-150%);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.4rem 0.6rem;
+}
+.skip:focus { transform: none; z-index: 5; }
+header h1 {
+  margin: 0.15rem 0 0.2rem;
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.kicker, .role, .tag, .caption, .legend, .meta, .note {
+  font-size: 0.78rem;
+}
+.kicker { margin: 0; color: var(--muted); letter-spacing: 0.04em; }
+.banner, .status-line {
+  margin: 0.7rem 0 0;
+  max-width: 46rem;
+}
+.status-line { font-size: 1.02rem; }
+.meta {
+  display: grid;
+  grid-template-columns: 7.2rem minmax(0, 1fr);
+  gap: 0.2rem 0.75rem;
+  margin: 0.85rem 0 0;
+  max-width: 46rem;
+}
+.meta dt { color: var(--muted); }
+.meta dd { margin: 0; overflow-wrap: anywhere; }
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 0.3rem 1.6rem;
+  align-items: start;
+  margin-top: 1rem;
+}
+header, .primary, .history { grid-column: 1 / -1; }
+aside { display: contents; }
+.board {
+  position: relative;
+  width: 100%;
+  height: 31rem;
+  margin: 0.2rem 0 0.7rem;
+}
+.wire, .stop, .tag, .arrow { position: absolute; }
+.wire { z-index: 0; pointer-events: none; }
+.wire.h { height: 0; border-top: 2px solid var(--ink); }
+.wire.v { width: 0; border-left: 2px solid var(--ink); }
+.wire.dashed.h { border-top-style: dashed; }
+.wire.dashed.v { border-left-style: dashed; }
+.stop, .tag, .arrow { z-index: 1; }
+.w-main1 { left: 25%; top: 10%; width: 13%; }
+.w-main2 { left: 62%; top: 10%; width: 13%; }
+.w-guard { left: 10%; top: 18%; height: 28%; }
+.w-only-v { left: 18%; top: 18%; height: 14%; }
+.w-only-h { left: 18%; top: 32%; width: 24%; }
+.w-only-d { left: 42%; top: 32%; height: 15%; }
+.w-back { left: 50%; top: 18%; height: 28%; }
+.w-bug { left: 87%; top: 18%; height: 28%; }
+.stop {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.12rem;
+  min-height: 0;
+  padding: 0.45rem 0.55rem 0.5rem 0.7rem;
+  border: 2px solid var(--ink);
+  border-left-width: 8px;
+  background: var(--sheet);
+  color: var(--ink);
+  text-decoration: none;
+  overflow: hidden;
+}
+.stop:focus-visible, summary:focus-visible, input:focus-visible, .skip:focus {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.stop[aria-current="true"] { outline: 3px solid var(--ink); outline-offset: 2px; }
+.stop .role { color: var(--muted); }
+.stop .sid, .fact .sid, .extra .sid {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+.stop .sid { white-space: nowrap; }
+.stop .state, .fact .state, .extra .state { font-weight: 700; }
+.stop[data-state="unverified"] { background: transparent; border-style: dashed; border-left-style: solid; border-left-color: var(--ink); }
+.stop[data-state="using"] { background: var(--using); border-left-color: var(--using-bar); }
+.stop[data-state="next"] { background: var(--next); border-left-color: var(--next-bar); }
+.stop[data-state="used"] { background: var(--used); border-left-color: var(--used-bar); }
+.stop[data-state="blocked"] { background: var(--blocked); border-left-color: var(--blocked-bar); }
+.stop[data-state="inapplicable"] { background: var(--off); border-left-color: var(--off-bar); }
+.stop[data-state="conditional"] { background: var(--cond); border-left-color: var(--cond-bar); }
+.stop[data-state="unavailable"] { background: var(--off); border-left-color: var(--off-bar); }
+.stop[data-state="unavailable"] .sid { text-decoration: line-through; }
+.idea { left: 1%; top: 2%; width: 24%; height: 16%; }
+.docs { left: 38%; top: 2%; width: 24%; height: 16%; }
+.loop { left: 75%; top: 2%; width: 24%; height: 16%; }
+.guard { left: 1%; top: 46%; width: 24%; height: 16%; }
+.always { left: 38%; top: 46%; width: 24%; height: 16%; }
+.debug { left: 75%; top: 46%; width: 24%; height: 16%; }
+.ess { left: 1%; top: 80%; width: 98%; height: 16%; }
+.tag {
+  margin: 0;
+  line-height: 1.2;
+  color: var(--ink);
+  background: var(--paper);
+  z-index: 2;
+}
+.t1 { left: 25.5%; top: 6.5%; width: 12%; text-align: center; }
+.t2 { left: 62.5%; top: 6.5%; width: 12%; text-align: center; }
+.t3 { left: 11%; top: 22%; width: 13%; }
+.t4 { left: 20%; top: 24%; width: 14%; }
+.t5 { left: 51%; top: 28%; width: 11%; }
+.t6 { left: 74%; top: 30%; width: 12%; text-align: right; }
+.t7 { left: 1%; top: 73%; width: 28%; }
+.arrow { z-index: 1; width: 0; height: 0; pointer-events: none; }
+.arrow.right { border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid var(--ink); transform: translate(-100%, -50%); }
+.arrow.down { border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 8px solid var(--ink); transform: translate(-50%, -100%); }
+.arrow.up { border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid var(--ink); transform: translate(-50%, 0); }
+.a1 { left: 38%; top: 10%; }
+.a2 { left: 75%; top: 10%; }
+.a3 { left: 10%; top: 46%; }
+.a4 { left: 42%; top: 46%; }
+.a5 { left: 50%; top: 18%; }
+.a6 { left: 87%; top: 46%; }
+.a7 { left: 87%; top: 18%; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.35rem 0.9rem; margin: 0.2rem 0 0.45rem; padding: 0; list-style: none; }
+.legend li { display: flex; align-items: center; gap: 0.35rem; }
+.swatch { width: 0.85rem; height: 0.85rem; border: 2px solid var(--ink); border-left-width: 5px; background: var(--sheet); }
+.swatch.using { background: var(--using); border-left-color: var(--using-bar); }
+.swatch.next { background: var(--next); border-left-color: var(--next-bar); }
+.swatch.used { background: var(--used); border-left-color: var(--used-bar); }
+.swatch.blocked { background: var(--blocked); border-left-color: var(--blocked-bar); }
+.swatch.off { background: var(--off); border-left-color: var(--off-bar); }
+.swatch.cond { background: var(--cond); border-left-color: var(--cond-bar); }
+.swatch.hollow { background: transparent; border-style: dashed; border-left-style: solid; }
+.caption, .note { margin: 0.25rem 0 0; max-width: 44rem; color: var(--ink); }
+h2 { margin: 0 0 0.35rem; font-size: 1.05rem; }
+.facts, .extras { margin: 0; }
+.extras { margin-top: 1rem; }
+.fact, .extra { border-top: 1px solid var(--rule); }
+.fact summary, .extra summary { padding: 0.4rem 0; cursor: pointer; }
+.fact[open], .extra[open], .fact:target { background: var(--sheet); outline: 2px solid var(--ink); padding: 0.15rem 0.4rem 0.45rem; }
+.fact p, .extra p { margin: 0.25rem 0; overflow-wrap: anywhere; }
+.k { display: inline-block; min-width: 2.5rem; color: var(--muted); }
+label.filter { display: block; margin: 0 0 0.4rem; font-size: 0.85rem; }
+input[type="search"] {
+  display: block;
+  width: 100%;
+  margin-top: 0.2rem;
+  padding: 0.4rem 0.45rem;
+  font: inherit;
+  color: inherit;
+  background: var(--sheet);
+  border: 2px solid var(--ink);
+  border-radius: 0;
+}
+#extras { list-style: none; margin: 0; padding: 0; max-height: 22rem; overflow: auto; }
+li[data-state="blocked"] .state { background: var(--blocked); padding: 0 0.25rem; }
+li[data-state="unverified"] .state { border-bottom: 1px dashed var(--ink); }
+.history { margin-top: 1.4rem; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; padding: 0.4rem 0.6rem 0.4rem 0; overflow-wrap: anywhere; }
+th { font-size: 0.78rem; color: var(--muted); font-weight: 650; }
+footer { margin-top: 1rem; color: var(--muted); font-size: 0.78rem; }
+@media (max-width: 860px) {
+  .layout, aside { display: block; }
+  .board { display: flex; flex-direction: column; gap: 0.55rem; height: auto; }
+  .wire, .arrow { display: none; }
+  .stop, .tag { position: static; width: auto; height: auto; left: auto; top: auto; text-align: left; }
+  .stop { min-height: 4.6rem; }
+  .tag { background: transparent; padding: 0.1rem 0 0.1rem 0.7rem; border-left: 2px solid var(--ink); }
+  #extras { max-height: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#route">跳到路线</a>
+<div class="page">
+  <div class="layout">
+    <header>
+      <p class="kicker">静态快照 · 双击本文件用浏览器打开 · 不会自己更新</p>
+      <h1>Skills 路线</h1>
+      <p class="banner" id="banner">空白模板。下面七个名字都还是未核实，不是某个项目的真实记录。</p>
+      <p class="status-line" id="status-line">正在用：没有。这一段没有标成正在用的 Skill。用过、下一步、卡住都还没有。</p>
+      <dl class="meta">
+        <dt>项目</dt>
+        <dd id="project-name">未填写</dd>
+        <dt>技能库</dt>
+        <dd id="library-path">未填写</dd>
+        <dt>源记录标记</dt>
+        <dd id="record-mark">unknown</dd>
+        <dt>源更新时间</dt>
+        <dd id="source-time">未知</dd>
+        <dt>本页生成时间</dt>
+        <dd id="generated-time">未生成</dd>
+      </dl>
+    </header>
+
+    <div class="primary">
+      <div class="board" id="route">
+        <span class="wire h solid w-main1" aria-hidden="true"></span>
+        <span class="wire h solid w-main2" aria-hidden="true"></span>
+        <span class="wire v dashed w-guard" aria-hidden="true"></span>
+        <span class="wire v dashed w-only-v" aria-hidden="true"></span>
+        <span class="wire h dashed w-only-h" aria-hidden="true"></span>
+        <span class="wire v dashed w-only-d" aria-hidden="true"></span>
+        <span class="wire v solid w-back" aria-hidden="true"></span>
+        <span class="wire v dashed w-bug" aria-hidden="true"></span>
+        <a class="stop idea" data-state="unverified" href="#fact-architecture-from-idea">
+          <span class="role">常见顺序</span>
+          <span class="sid">architecture-from-idea</span>
+          <span class="state">未核实</span>
+        </a>
+        <p class="tag t1">常见下一步</p>
+        <a class="stop docs" data-state="unverified" href="#fact-agent-constraint-docs">
+          <span class="role">常见顺序</span>
+          <span class="sid">agent-constraint-docs</span>
+          <span class="state">未核实</span>
+        </a>
+        <p class="tag t2">常见下一步</p>
+        <a class="stop loop" data-state="unverified" href="#fact-vibe-coding-loop">
+          <span class="role">常见顺序，可再用</span>
+          <span class="sid">vibe-coding-loop</span>
+          <span class="state">未核实</span>
+        </a>
+        <p class="tag t3">有条件，可再用</p>
+        <a class="stop guard" data-state="unverified" href="#fact-architecture-guardrails">
+          <span class="role">有条件，可再用</span>
+          <span class="sid">architecture-guardrails</span>
+          <span class="state">未核实</span>
+        </a>
+        <p class="tag t4">只有这类工作</p>
+        <a class="stop always" data-state="unverified" href="#fact-always-on-agents">
+          <span class="role">只有这类工作</span>
+          <span class="sid">always-on-agents</span>
+          <span class="state">未核实</span>
+        </a>
+        <p class="tag t5">回到文档</p>
+        <p class="tag t6">有条件；修好后回到编码</p>
+        <a class="stop debug" data-state="unverified" href="#fact-debug-with-logs">
+          <span class="role">有条件，可再用</span>
+          <span class="sid">debug-with-logs</span>
+          <span class="state">未核实</span>
+        </a>
+        <p class="tag t7">贯穿，不是顺序上的一站</p>
+        <a class="stop ess" data-state="unverified" href="#fact-project-essentials">
+          <span class="role">贯穿，不是一站</span>
+          <span class="sid">project-essentials</span>
+          <span class="state">未核实</span>
+        </a>
+        <i class="arrow right a1" aria-hidden="true"></i>
+        <i class="arrow right a2" aria-hidden="true"></i>
+        <i class="arrow down a3" aria-hidden="true"></i>
+        <i class="arrow down a4" aria-hidden="true"></i>
+        <i class="arrow up a5" aria-hidden="true"></i>
+        <i class="arrow down a6" aria-hidden="true"></i>
+        <i class="arrow up a7" aria-hidden="true"></i>
+      </div>
+      <ul class="legend">
+        <li><i class="swatch used" aria-hidden="true"></i>用过 used</li>
+        <li><i class="swatch using" aria-hidden="true"></i>正在用 using</li>
+        <li><i class="swatch next" aria-hidden="true"></i>下一步 next</li>
+        <li><i class="swatch blocked" aria-hidden="true"></i>卡住 blocked</li>
+        <li><i class="swatch off" aria-hidden="true"></i>用不上 inapplicable</li>
+        <li><i class="swatch hollow" aria-hidden="true"></i>未核实 unverified</li>
+        <li><i class="swatch off" aria-hidden="true"></i>源已不在 unavailable</li>
+        <li><i class="swatch cond" aria-hidden="true"></i>有条件才用 conditional</li>
+      </ul>
+      <p class="caption">箭头是技能库文档里写过的建议关系，不是已经走过的顺序，也不是完成进度。颜色和状态词只表示这份地图写下的状态。可以同时有多个正在用或下一步。没有画出来的名字，关系就是未知。</p>
+    </div>
+
+    <aside>
+      <section class="facts" aria-label="站点说明">
+        <h2>站点说明</h2>
+        <p class="note">点路线上的名字，或打开下面某一条。证据按文字抄在这里，不做成会跳到本机磁盘的链接。</p>
+        <details class="fact" id="fact-architecture-from-idea" data-state="unverified">
+          <summary><span class="sid">architecture-from-idea</span> <span class="state">未核实</span></summary>
+          <p class="reason"><span class="k">理由</span>还没有理由。</p>
+          <p class="evidence"><span class="k">证据</span>还没有证据。</p>
+        </details>
+        <details class="fact" id="fact-agent-constraint-docs" data-state="unverified">
+          <summary><span class="sid">agent-constraint-docs</span> <span class="state">未核实</span></summary>
+          <p class="reason"><span class="k">理由</span>还没有理由。</p>
+          <p class="evidence"><span class="k">证据</span>还没有证据。</p>
+        </details>
+        <details class="fact" id="fact-vibe-coding-loop" data-state="unverified">
+          <summary><span class="sid">vibe-coding-loop</span> <span class="state">未核实</span></summary>
+          <p class="reason"><span class="k">理由</span>还没有理由。</p>
+          <p class="evidence"><span class="k">证据</span>还没有证据。</p>
+        </details>
+        <details class="fact" id="fact-project-essentials" data-state="unverified">
+          <summary><span class="sid">project-essentials</span> <span class="state">未核实</span></summary>
+          <p class="reason"><span class="k">理由</span>还没有理由。</p>
+          <p class="evidence"><span class="k">证据</span>还没有证据。</p>
+        </details>
+        <details class="fact" id="fact-architecture-guardrails" data-state="unverified">
+          <summary><span class="sid">architecture-guardrails</span> <span class="state">未核实</span></summary>
+          <p class="reason"><span class="k">理由</span>还没有理由。</p>
+          <p class="evidence"><span class="k">证据</span>还没有证据。</p>
+        </details>
+        <details class="fact" id="fact-debug-with-logs" data-state="unverified">
+          <summary><span class="sid">debug-with-logs</span> <span class="state">未核实</span></summary>
+          <p class="reason"><span class="k">理由</span>还没有理由。</p>
+          <p class="evidence"><span class="k">证据</span>还没有证据。</p>
+        </details>
+        <details class="fact" id="fact-always-on-agents" data-state="unverified">
+          <summary><span class="sid">always-on-agents</span> <span class="state">未核实</span></summary>
+          <p class="reason"><span class="k">理由</span>还没有理由。</p>
+          <p class="evidence"><span class="k">证据</span>还没有证据。</p>
+        </details>
+      </section>
+      <section class="extras" aria-label="路线以外的名字">
+        <h2>路线以外</h2>
+        <p class="note" id="extra-count">共 0 个。不在已知路线上，这里不画线。</p>
+        <label class="filter">按英文名筛选
+          <input id="extra-filter" type="search" placeholder="例如 skill 名" autocomplete="off">
+        </label>
+        <p class="note" id="extra-empty" hidden>没有符合的名字。</p>
+        <ul id="extras"></ul>
+      </section>
+    </aside>
+
+    <section class="history">
+      <h2>历史</h2>
+      <p class="note">只追加，不删旧行。空白模板还没有历史。</p>
+      <table>
+        <thead>
+          <tr><th>何时</th><th>Skill</th><th>变化</th><th>证据或理由</th></tr>
+        </thead>
+        <tbody id="history-body"></tbody>
+      </table>
+    </section>
+  </div>
+  <footer>打开本页不会读取文件夹，也不会改 SKILL_MAP.md。要更新，按技能库 NAVIGATION.md，在一段工作结束时改那份 Markdown，再改本文件。网页没写成，就留着旧页并说明它过期。</footer>
+</div>
+<script>
+(function () {
+  document.documentElement.classList.add("js");
+  var stops = document.querySelectorAll(".stop");
+  function mark(id) {
+    stops.forEach(function (stop) {
+      if (stop.getAttribute("href") === "#" + id) stop.setAttribute("aria-current", "true");
+      else stop.removeAttribute("aria-current");
+    });
+    var fact = document.getElementById(id);
+    if (!fact) return;
+    document.querySelectorAll("#extras details, .fact").forEach(function (node) {
+      if (node !== fact) node.removeAttribute("open");
+    });
+    fact.setAttribute("open", "");
+  }
+  window.addEventListener("hashchange", function () { mark(location.hash.slice(1)); });
+  if (location.hash.length > 1) mark(location.hash.slice(1));
+  var input = document.getElementById("extra-filter");
+  var items = document.querySelectorAll("#extras li");
+  var empty = document.getElementById("extra-empty");
+  function apply() {
+    var q = (input.value || "").trim().toLowerCase();
+    var shown = 0;
+    items.forEach(function (li) {
+      var name = (li.getAttribute("data-name") || "").toLowerCase();
+      var ok = !q || name.indexOf(q) !== -1;
+      li.hidden = !ok;
+      if (ok) shown += 1;
+    });
+    empty.hidden = q === "" || shown !== 0;
+  }
+  if (input) {
+    input.addEventListener("input", apply);
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        input.value = "";
+        apply();
+      }
+    });
+    var find = new URLSearchParams(location.search).get("find");
+    if (find) {
+      input.value = find;
+      apply();
+    }
+  }
+})();
+</script>
+</body>
+</html>
