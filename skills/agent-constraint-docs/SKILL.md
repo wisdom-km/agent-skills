@@ -21,7 +21,7 @@ description: >-
 
 在架构已经（或正在）定下来、需要生成或更新 coding agent 会遵循的文档时使用：`AGENTS.md` / `CLAUDE.md`、PRD、ARCHITECTURE、RULES 或标准文档、执行计划、ADR、验收记录、PR 与任务模板。也用于现有 agent 文档太长、过期或互相矛盾时。
 
-**使用地图。** 开工时用平时读文件的方式看技能库 `skills/` 里每个 `SKILL.md` 的名字，对照本项目根目录的 `SKILL_MAP.md`。空白模板是 [templates/SKILL_MAP.md](templates/SKILL_MAP.md)。新名字标成未核实，不要编造关系和用过的记录。没有脚本，装上或读过 Skill 也不会自动执行。读过不等于用过，用过不等于做完。一段工作结束时更新这份地图，并告诉用户：用过、正在用、下一步、卡住。项目根不清楚就不要写。详见 [`NAVIGATION.md`](../../NAVIGATION.md)。
+**使用地图。** 开工时用平时读文件的方式看技能库 `skills/` 里每个 `SKILL.md` 的名字，对照本项目根目录的 `SKILL_MAP.md`。空白模板是 [templates/SKILL_MAP.md](templates/SKILL_MAP.md) 和 [templates/SKILL_MAP.html](templates/SKILL_MAP.html)。新名字标成未核实，不要编造关系和用过的记录。没有脚本，装上或打开网页也不会自动更新。一段工作结束时按 [`NAVIGATION.md`](../../NAVIGATION.md) 先改 `SKILL_MAP.md`，再改旁边的 `SKILL_MAP.html`；网页没写成就留着旧页并说明它过期。然后告诉用户：用过、正在用、下一步、卡住。项目根不清楚就不要写。
 
 还没有分流（原型 / 曳光弹 / 长期）时，先用 `architecture-from-idea`。把「不能有例外」的规则变成 lint / CI / hook 时，再用 `architecture-guardrails`。每个编码任务的执行用 `vibe-coding-loop`。
 
@@ -71,7 +71,7 @@ description: >-
 9. 何时停下问人（规格冲突、范围变化、缺接口、花钱、密钥、改门禁）。
 10. 可选：容易误导的地方（看着没用其实在用的目录、不许再抄的旧模式）。
 11. 可选：子目录 `AGENTS.md` 只写本目录工具链，冲突以根为准。
-12. 可选：Skills 使用地图。根 `AGENTS.md` 用两三句指向本项目的 `SKILL_MAP.md`（怎么看、怎么记，见技能库 `NAVIGATION.md`）。不要把地图正文抄进 `AGENTS.md`。装上 Skill 不会自动跑钩子。
+12. 可选：Skills 使用地图。根 `AGENTS.md` 用两三句指向本项目的 `SKILL_MAP.md` 和 `SKILL_MAP.html`（怎么维护只看技能库 `NAVIGATION.md`）。不要把地图正文抄进 `AGENTS.md`。装上或打开网页都不会自动更新。
 
 加载机制备忘：Codex 从项目根往下合并每层 `AGENTS.md`，越近越优先，默认合计上限 32 KiB（[Agents.md 指南](https://developers.openai.com/codex/guides/agents-md)）。Claude Code 没有 `CLAUDE.md` 时读 `AGENTS.md`，或用 `@AGENTS.md` 导入后再追加专属内容（[memory](https://code.claude.com/docs/en/memory)）。聊天里的明确指示覆盖文档。
 

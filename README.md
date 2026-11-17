@@ -57,9 +57,9 @@ You don't need all of them. Start wherever you are: no architecture yet → `arc
 
 The diagram above says how the skills relate. It is not a project's progress, and it is not a system architecture. You do not need Python, Node, or any other runtime to use it, and nothing runs in the background. Reading or installing a skill does not execute it.
 
-The picture and a text fallback are in [`NAVIGATION.md`](NAVIGATION.md). This repository stores that catalog only. Each project keeps its own `SKILL_MAP.md` in that project's root, copied from [`skills/agent-constraint-docs/templates/SKILL_MAP.md`](skills/agent-constraint-docs/templates/SKILL_MAP.md), so two projects can share one skills directory and still have different histories. A skill the agent has not judged yet stays unverified. Reading a skill is not use, and use is not finished work.
+The picture and a text fallback are in [`NAVIGATION.md`](NAVIGATION.md). This repository stores that catalog only. Each project keeps two files in its own root: `SKILL_MAP.md` (the record) and `SKILL_MAP.html` (a static route map you open by double-click). Copy them from [`SKILL_MAP.md`](skills/agent-constraint-docs/templates/SKILL_MAP.md) and [`SKILL_MAP.html`](skills/agent-constraint-docs/templates/SKILL_MAP.html). Two projects can share one skills directory and still have different histories. A skill the agent has not judged yet stays unverified. Reading a skill is not use, and use is not finished work.
 
-At the start of work the agent reads the `skills/` folders with its ordinary file tools and updates that project's map. If the project root is unclear, it does not write. At the end of a work segment it tells you, in a few sentences: what it used, what it is using now, what is next, and what is blocked.
+At the start of work the agent reads the `skills/` folders with its ordinary file tools. If the project root is unclear, it does not write. At the end of a work segment it updates the Markdown, then the HTML beside it, and tells you what it used, what it is using now, what is next, and what is blocked. Opening the HTML does not watch the folder. If the HTML cannot be written, the old page stays and the agent says it is stale.
 
 ## Tiers and mandatory gates
 
@@ -211,7 +211,7 @@ Issues and pull requests are welcome — bug reports, unclear steps, broken link
 - Don't state anything as verified unless you checked it; mark the rest as unverified.
 - Never commit secrets or real personal data, including in examples.
 - A new skill is a new folder under `skills/`. If you know how it relates to the others, add a row to [`NAVIGATION.md`](NAVIGATION.md). If you do not know, leave the relationship unknown.
-- Do not record a project's usage status in this repository. That stays in the project's own `SKILL_MAP.md`.
+- Do not record a project's usage status in this repository. That stays in the project's own `SKILL_MAP.md` and `SKILL_MAP.html`.
 
 ## License
 
