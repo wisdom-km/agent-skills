@@ -123,7 +123,7 @@ GitHub 官方步骤（[Managing a branch protection rule](https://docs.github.co
 ## 7. 限度（照实说）
 
 - `git commit --no-verify` 能跳过 pre-commit。所以 pre-commit 只是第一道；真正的门是 CI 加分支保护。
-- agent 或人都可能改 `scripts/check.conf` 或检查脚本本身让它变绿。Claude Code 的 ask 规则只管 Claude；其他情况靠 PR 审查：改门禁文件的 PR 要你本人看过。
+- agent 或人都可能改 `scripts/check.conf` 或检查脚本本身让它变绿。Claude Code 的 ask 规则只管 Claude；其他情况靠 PR 审查：改门禁文件的 PR 要你本人看过。候选靠改这些文件让自己变绿时，按 `vibe-coding-loop` 第 6 步，不能据此写成通过。规则变更要单独审查，不是禁止修改规则。
 - 没开分支保护（或管理员能绕过）时，红色的 CI 只是提醒，挡不住合入。
 - 只有 M-01、M-02、M-03、M-04、M-05、M-06、M-08、M-09 的一部分能机器查。其余项靠门禁表和审查；门禁表里不能把它们写成「已被机器强制」。
 
