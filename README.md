@@ -59,7 +59,7 @@ The diagram above says how the skills relate. It is not a project's progress, an
 
 The picture and a text fallback are in [`NAVIGATION.md`](NAVIGATION.md). This repository stores that catalog only. Each project keeps two files in its own root: `SKILL_MAP.md` (the record) and `SKILL_MAP.html` (a static route map you open by double-click). Copy them from [`SKILL_MAP.md`](skills/agent-constraint-docs/templates/SKILL_MAP.md) and [`SKILL_MAP.html`](skills/agent-constraint-docs/templates/SKILL_MAP.html). Two projects can share one skills directory and still have different histories. A skill the agent has not judged yet stays unverified. Reading a skill is not use, and use is not finished work.
 
-At the start of work the agent reads the `skills/` folders with its ordinary file tools. If the project root is unclear, it does not write. At the end of a work segment it updates the Markdown, then the HTML beside it, and tells you what it used, what it is using now, what is next, and what is blocked. Opening the HTML does not watch the folder. If the HTML cannot be written, the old page stays and the agent says it is stale.
+At the start of work the agent reads the `skills/` folders with its ordinary file tools. If the project root is unclear, it does not write. At the end of a work segment it updates the Markdown, then the HTML beside it, and tells you what it used, what it is using now, what is next, and what is blocked. Opening the HTML does not watch the folder. If the HTML cannot be written, the old page stays and the agent says it is stale. Without new information it does not retry that write, and a refused write is not a successful update.
 
 ## Tiers and mandatory gates
 
@@ -112,14 +112,54 @@ Honest limits:
 
 ## Install
 
-Clone the repository, then copy **whole skill folders** to a directory your agent scans:
+Clone the catalog, then copy from **its root** (the directory that contains `NAVIGATION.md` and `skills/`). The catalog and the directory an agent scans are not the same tree.
 
-```bash
-git clone https://github.com/wisdom-km/agent-skills.git
-cp -R agent-skills/skills/* <your-skills-directory>/
+```text
+agent-skills/                 catalog root, after clone
+  NAVIGATION.md
+  README.md
+  README.zh-CN.md
+  LICENSE
+  skills/<skill-name>/SKILL.md
 ```
 
-Or copy only the skills you want, for example `cp -R agent-skills/skills/debug-with-logs <your-skills-directory>/`.
+Do not copy this repository's `AGENTS.md` or `docs/approvals.md`. Do not copy `SKILL_MAP.md` or `SKILL_MAP.html` out to a shared directory. The blank map templates stay inside `skills/agent-constraint-docs/templates/`. Each project keeps its own two map files at that project's root.
+
+Agents scan a directory named `skills`. `NAVIGATION.md` stays in the parent of that directory. A skill file links to `../../NAVIGATION.md`, and `NAVIGATION.md` links to `skills/<name>/...`. Both resolve with this layout:
+
+```text
+<parent>/
+  NAVIGATION.md
+  skills/<skill-name>/SKILL.md
+```
+
+`<parent>` is one of the paths listed in the tables below: a project directory `.agents`, `.cursor`, `.claude`, or `.codex`, or the home directory `~/.agents`, `~/.cursor`, `~/.claude`, or `~/.codex`. The same relative placement covers those eight. It does not cover a scan directory with another name or another depth. Copying these files was checked as a file layout on Linux. It was not checked on Windows, inside a running agent, via `$skill-installer`, or as Cloud Agent sync of `~/.cursor/skills/`.
+
+Run this from the catalog root. Set `PARENT` to the parent directory, not to the `skills` directory itself. If `NAVIGATION.md` is already there, or any of these seven skill folders is already there, or `skills` exists and is not a directory, the copy stops. It does not overwrite those files and it does not merge into them. Other skill folders already in that `skills` directory are left as they are.
+
+```bash
+PARENT=/absolute/path/to/project/.agents
+
+if [ -e "$PARENT/NAVIGATION.md" ]; then
+  printf '%s\n' "STOP: $PARENT/NAVIGATION.md already exists. Not overwriting."
+  exit 1
+fi
+if [ -e "$PARENT/skills" ] && [ ! -d "$PARENT/skills" ]; then
+  printf '%s\n' "STOP: $PARENT/skills exists and is not a directory. Not merging."
+  exit 1
+fi
+for name in architecture-from-idea agent-constraint-docs vibe-coding-loop project-essentials architecture-guardrails debug-with-logs always-on-agents; do
+  if [ -e "$PARENT/skills/$name" ]; then
+    printf '%s\n' "STOP: $PARENT/skills/$name already exists. Not merging."
+    exit 1
+  fi
+done
+mkdir -p "$PARENT/skills"
+cp -R skills/. "$PARENT/skills/"
+cp NAVIGATION.md "$PARENT/NAVIGATION.md"
+```
+
+`cp -R skills/.` copies the skill folders, including dotfiles inside them. Copying a single skill still needs `NAVIGATION.md` in that same parent for `../../NAVIGATION.md`. Links in `NAVIGATION.md` to skills you did not copy will not resolve. The block above is the full copy of all seven.
 
 ### Cursor
 

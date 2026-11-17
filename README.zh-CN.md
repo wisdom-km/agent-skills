@@ -59,7 +59,7 @@ flowchart LR
 
 图和看不清图时的文本在 [`NAVIGATION.md`](NAVIGATION.md)。本仓库只保存这份目录。每个项目在自己的根目录放两份文件：`SKILL_MAP.md` 是记录，`SKILL_MAP.html` 是双击就能看的静态路线图。从 [`SKILL_MAP.md`](skills/agent-constraint-docs/templates/SKILL_MAP.md) 和 [`SKILL_MAP.html`](skills/agent-constraint-docs/templates/SKILL_MAP.html) 复制。两个项目可以共用一个技能目录，使用记录仍然分开。还没判断的 Skill 标成未核实。读过不等于用过，用过不等于做完。
 
-开工时 agent 用平时读文件的方式看 `skills/`。项目根不清楚就不写。一段工作结束时，它先改 Markdown，再改旁边的 HTML，并用几句话告诉你：用过、正在用、下一步、卡住。打开网页不会监视文件夹。网页没写成就留着旧页，并说明它过期。
+开工时 agent 用平时读文件的方式看 `skills/`。项目根不清楚就不写。一段工作结束时，它先改 Markdown，再改旁边的 HTML，并用几句话告诉你：用过、正在用、下一步、卡住。打开网页不会监视文件夹。网页没写成就留着旧页，并说明它过期。没有新信息就不要再试同一次写入；被拒绝不算写成功。
 
 ## 档位和强制门禁
 
@@ -112,14 +112,54 @@ flowchart LR
 
 ## 安装
 
-克隆本仓库，把**整个 Skill 文件夹**拷到 agent 会扫描的目录：
+先克隆这份目录，再从**它的根**拷贝（根目录里有 `NAVIGATION.md` 和 `skills/`）。这份目录和 agent 扫描的目录不是同一棵树。
 
-```bash
-git clone https://github.com/wisdom-km/agent-skills.git
-cp -R agent-skills/skills/* <你的 skills 目录>/
+```text
+agent-skills/                 克隆之后的目录根
+  NAVIGATION.md
+  README.md
+  README.zh-CN.md
+  LICENSE
+  skills/<skill-name>/SKILL.md
 ```
 
-也可以只拷需要的，例如 `cp -R agent-skills/skills/debug-with-logs <你的 skills 目录>/`。
+不要把本仓库的 `AGENTS.md` 或 `docs/approvals.md` 拷进你的项目。不要把 `SKILL_MAP.md` 或 `SKILL_MAP.html` 单独拷到共享目录。空白地图模板留在 `skills/agent-constraint-docs/templates/` 里。每个项目自己的两份地图只放在该项目的根目录。
+
+agent 扫描的是名为 `skills` 的目录。`NAVIGATION.md` 放在这个目录的上一级。Skill 文件里的链接是 `../../NAVIGATION.md`，`NAVIGATION.md` 里的链接是 `skills/<名字>/...`。两边同时对得上的布局是：
+
+```text
+<parent>/
+  NAVIGATION.md
+  skills/<skill-name>/SKILL.md
+```
+
+`<parent>` 用下面表格里的路径：项目里的 `.agents`、`.cursor`、`.claude`、`.codex`，或用户目录里的 `~/.agents`、`~/.cursor`、`~/.claude`、`~/.codex`。这八个位置的相对关系相同。扫描目录不叫 `skills`，或还隔着别的层级时，不在这八个之内。这些文件的拷贝只在 Linux 上按文件布局核对过。没有在 Windows 上核对，没有在正在运行的 agent 里核对，没有用 `$skill-installer` 核对，也没有核对 Cloud Agent 对 `~/.cursor/skills/` 的同步。
+
+在目录根执行下面的命令。`PARENT` 指向上一级，不要指到 `skills` 本身。如果那里已经有 `NAVIGATION.md`，或者这七个 Skill 文件夹里已经有同名的一个，或者 `skills` 存在但不是目录，拷贝会停。不停下来覆盖，也不把目录合并进去。该 `skills` 目录里其他名字的 Skill 文件夹保持不动。
+
+```bash
+PARENT=/absolute/path/to/project/.agents
+
+if [ -e "$PARENT/NAVIGATION.md" ]; then
+  printf '%s\n' "STOP: $PARENT/NAVIGATION.md already exists. Not overwriting."
+  exit 1
+fi
+if [ -e "$PARENT/skills" ] && [ ! -d "$PARENT/skills" ]; then
+  printf '%s\n' "STOP: $PARENT/skills exists and is not a directory. Not merging."
+  exit 1
+fi
+for name in architecture-from-idea agent-constraint-docs vibe-coding-loop project-essentials architecture-guardrails debug-with-logs always-on-agents; do
+  if [ -e "$PARENT/skills/$name" ]; then
+    printf '%s\n' "STOP: $PARENT/skills/$name already exists. Not merging."
+    exit 1
+  fi
+done
+mkdir -p "$PARENT/skills"
+cp -R skills/. "$PARENT/skills/"
+cp NAVIGATION.md "$PARENT/NAVIGATION.md"
+```
+
+`cp -R skills/.` 会连同 Skill 文件夹里的点文件一起拷。只拷一个 Skill 时，同一个上一级仍然要有 `NAVIGATION.md`，`../../NAVIGATION.md` 才找得到；`NAVIGATION.md` 里指向没拷贝的 Skill 的链接对不上。上面这一段是七个一起拷的完整步骤。
 
 ### Cursor
 
